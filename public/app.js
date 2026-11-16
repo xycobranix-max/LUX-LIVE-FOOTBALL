@@ -346,3 +346,117 @@ setInterval(() => {
     loadLiveMatches();
     loadFixtures();
 }, 60000);
+
+
+const leagueData = {
+    "premier-league": {
+        name: "Premier League",
+        country: "England",
+        icon: "🏆",
+        teams: [
+            "Arsenal", "Manchester City", "Liverpool",
+            "Manchester United", "Chelsea", "Tottenham Hotspur",
+            "Newcastle United", "Aston Villa", "West Ham United",
+            "Brighton", "Everton", "Crystal Palace",
+            "Fulham", "Brentford", "Wolves",
+            "Bournemouth", "Nottingham Forest", "Leicester City",
+            "Ipswich Town", "Southampton"
+        ]
+    },
+    "la-liga": {
+        name: "La Liga",
+        country: "Spain",
+        icon: "🏆",
+        teams: [
+            "Real Madrid", "Barcelona", "Atletico Madrid",
+            "Athletic Bilbao", "Real Sociedad", "Real Betis",
+            "Sevilla", "Villarreal", "Valencia", "Girona",
+            "Getafe", "Osasuna", "Celta Vigo", "Mallorca",
+            "Rayo Vallecano", "Las Palmas", "Leganes",
+            "Espanyol", "Alaves", "Real Valladolid"
+        ]
+    },
+    "serie-a": {
+        name: "Serie A",
+        country: "Italy",
+        icon: "🏆",
+        teams: [
+            "Inter Milan", "AC Milan", "Juventus", "Napoli",
+            "Roma", "Lazio", "Atalanta", "Fiorentina",
+            "Bologna", "Torino", "Udinese", "Genoa",
+            "Como", "Parma", "Cagliari", "Lecce",
+            "Empoli", "Verona", "Monza", "Venezia"
+        ]
+    },
+    "bundesliga": {
+        name: "Bundesliga",
+        country: "Germany",
+        icon: "🏆",
+        teams: [
+            "Bayern Munich", "Borussia Dortmund", "Bayer Leverkusen",
+            "RB Leipzig", "Eintracht Frankfurt", "Stuttgart",
+            "Hoffenheim", "Wolfsburg", "Freiburg", "Mainz",
+            "Augsburg", "Werder Bremen", "Union Berlin",
+            "Borussia Monchengladbach", "Heidenheim",
+            "St Pauli", "Holstein Kiel", "Bochum"
+        ]
+    },
+    "champions-league": {
+        name: "Champions League",
+        country: "Europe",
+        icon: "🏆",
+        teams: [
+            "Real Madrid", "Manchester City", "Arsenal",
+            "Liverpool", "Barcelona", "Bayern Munich",
+            "Paris Saint-Germain", "Inter Milan", "AC Milan",
+            "Juventus", "Borussia Dortmund", "Atletico Madrid"
+        ]
+    },
+    "afcon": {
+        name: "AFCON",
+        country: "Africa",
+        icon: "🌍",
+        teams: [
+            "Kenya", "Nigeria", "Egypt", "Morocco",
+            "Senegal", "Ivory Coast", "Ghana", "Cameroon",
+            "South Africa", "Algeria", "Tunisia", "Mali"
+        ]
+    }
+};
+
+function openLeague(leagueId) {
+    const league = leagueData[leagueId];
+    if (!league) return;
+
+    document.querySelectorAll("[data-page-section]").forEach(page => {
+        page.style.display = "none";
+    });
+
+    const details = document.getElementById("leagueDetailsPage");
+    details.style.display = "block";
+
+    document.getElementById("leagueIcon").textContent = league.icon;
+    document.getElementById("leagueTitle").textContent = league.name;
+    document.getElementById("leagueCountry").textContent =
+        league.country + " · Participating teams";
+
+    document.getElementById("leagueTeams").innerHTML =
+        league.teams.map((team, index) => `
+            <div class="league-team-card">
+                <span>${index + 1}</span>
+                <strong>${team}</strong>
+                <span>›</span>
+            </div>
+        `).join("");
+
+    window.scrollTo(0, 0);
+}
+
+function closeLeague() {
+    document.getElementById("leagueDetailsPage").style.display = "none";
+
+    const home = document.getElementById("homePage");
+    home.style.display = "";
+
+    window.scrollTo(0, 0);
+}
