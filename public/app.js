@@ -425,37 +425,39 @@ const leagueData = {
 };
 
 
+// Remember which league the visitor opened
+let currentLeagueId = null;
+
 function openLeague(leagueId) {
     const league = leagueData[leagueId];
 
-    if (!league) {
-        console.error("League not found:", leagueId);
-        return;
-    }
+    if (!league) return;
 
-    // Hide all normal pages
+    currentLeagueId = leagueId;
+
     document.querySelectorAll("[data-page-section]").forEach(page => {
         page.hidden = true;
     });
 
-    // Show league details
+    document.getElementById("teamProfilePage").hidden = true;
+
     const details = document.getElementById("leagueDetailsPage");
     details.hidden = false;
 
-    // Update league information
     document.getElementById("leagueIcon").textContent = league.icon;
     document.getElementById("leagueTitle").textContent = league.name;
     document.getElementById("leagueCountry").textContent =
         league.country + " · Participating Teams";
 
-    // Display teams
     const teamsContainer = document.getElementById("leagueTeams");
-
     teamsContainer.replaceChildren();
 
     league.teams.forEach((team, index) => {
         const card = document.createElement("div");
         card.className = "league-team-card";
+        card.style.cursor = "pointer";
+        card.setAttribute("role", "button");
+        card.setAttribute("tabindex", "0");
 
         const number = document.createElement("span");
         number.textContent = index + 1;
@@ -467,24 +469,83 @@ function openLeague(leagueId) {
         arrow.textContent = "›";
 
         card.append(number, name, arrow);
+
+        card.addEventListener("click", () => openTeam(team));
+
+        card.addEventListener("keydown", event => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openTeam(team);
+            }
+        });
+
         teamsContainer.appendChild(card);
     });
 
     window.scrollTo(0, 0);
 }
 
-function closeLeague() {
-    // Hide league details
+
+// Open an individual team profile
+function openTeam(teamName) {
+    const league = leagueData[currentLeagueId];
+
+    if (!league) return;
+
     document.getElementById("leagueDetailsPage").hidden = true;
 
-    // Restore homepage
+    const profile = document.getElementById("teamProfilePage");
+    profile.hidden = false;
+
+    document.getElementById("teamProfileName").textContent = teamName;
+
+    document.getElementById("teamProfileLeague").textContent =
+        league.name + " · " + league.country;
+
+    document.getElementById("teamProfileCountry").textContent =
+        league.country;
+
+    document.getElementById("teamProfileCompetition").textContent =
+        league.name;
+
+    document.getElementById("teamProfileLogo").textContent =
+        teamName.split(" ").map(word => word[0]).join("").substring(0, 3);
+
+    document.getElementById("teamProfileDescription").textContent =
+        "Welcome to the " + teamName +
+        " club profile. Explore club information, players, fixtures and results.";
+
+    window.scrollTo(0, 0);
+}
+
+
+// Return from team profile to its league
+function closeTeam() {
+    document.getElementById("teamProfilePage").hidden = true;
+    document.getElementById("leagueDetailsPage").hidden = false;
+
+    window.scrollTo(0, 0);
+}
+
+
+// Return from league to homepage
+function closeLeague() {
+    document.getElementById("teamProfilePage").hidden = true;
+    document.getElementById("leagueDetailsPage").hidden = true;
+
     document.getElementById("homePage").hidden = false;
 
-    // Update URL
-    window.history.pushState({ page: "home" }, "", window.location.pathname);
+    currentLeagueId = null;
+
+    window.history.pushState(
+        { page: "home" },
+        "",
+        window.location.pathname
+    );
 
     document.title = "HOME | LUX LIVE FOOTBALL";
 
     window.scrollTo(0, 0);
 }
+
 
