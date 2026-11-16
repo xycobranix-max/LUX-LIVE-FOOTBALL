@@ -51,6 +51,7 @@
 
 <!-- HEADER / DASHBOARD NAVIGATION -->
 <header class="header">
+    <button class="login-btn" onclick="showLogin()">Sign In</button>
 
     <div class="logo">
         <span class="logo-icon">⚽</span>
@@ -58,15 +59,9 @@
     </div>
 
     <button class="dashboard-toggle" id="dashboardToggle"
-        aria-label="Open dashboard" aria-expanded="false">
-    ☰ <span>Dashboard</span>
-</button>
-
-    <div class="header-actions">
-        <button class="search-btn" aria-label="Search">⌕</button>
-        <button class="login-btn" onclick="showLogin()">Sign In</button>
-    </div>
-
+            aria-label="Open dashboard" aria-expanded="false">
+        ☰ <span>Dashboard</span>
+    </button>
 </header>
 
 <!-- DASHBOARD OVERLAY -->
@@ -141,6 +136,12 @@
 
     <!-- HOME PAGE -->
     <div id="homePage" data-page-section="home">
+
+<div class="home-search">
+    <input type="search" id="homeSearchInput"
+           placeholder="Search teams, leagues or matches...">
+    <button type="button" id="homeSearchButton">Search</button>
+</div>
 
         <section class="hero">
 
