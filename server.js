@@ -7,6 +7,8 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const API_BASE = "https://v3.football.api-sports.io";
+const API_KEY = process.env.API_FOOTBALL_KEY;
 
 // MIDDLEWARE
 app.use(cors());
@@ -19,13 +21,256 @@ app.use(express.static(path.join(__dirname, "public")));
 // PLATFORM INFORMATION
 const platform = {
     name: "LUX LIVE FOOTBALL",
-    version: "1.0.0",
+    version: "2.0.0",
     status: "online"
 };
 
-// MATCH DATA
-const liveMatches = [];
-const fixtures = [];
+// SIX COMPETITIONS
+const competitions = {
+    "premier-league": {
+        name: "Premier League",
+        country: "England",
+        icon: "🏆",
+        id: 39
+    },
+    "la-liga": {
+        name: "La Liga",
+        country: "Spain",
+        icon: "🏆",
+        id: 140
+    },
+    "serie-a": {
+        name: "Serie A",
+        country: "Italy",
+        icon: "🏆",
+        id: 135
+    },
+    "bundesliga": {
+        name: "Bundesliga",
+        country: "Germany",
+        icon: "🏆",
+        id: 78
+    },
+    "champions-league": {
+        name: "Champions League",
+        country: "Europe",
+        icon: "🏆",
+        id: 2
+    },
+    "afcon": {
+        name: "Africa Cup of Nations",
+        country: "Africa",
+        icon: "🌍",
+        id: 6
+    }
+};
+
+// SIMPLE SERVER CACHE
+const cache = new Map();
+
+async function cached(key, duration, loader) {
+    const existing = cache.get(key);
+
+    if (existing && existing.expires > Date.now()) {
+        return existing.value;
+    }
+
+    const value = await loader();
+
+    cache.set(key, {
+        value,
+        expires: Date.now() + duration
+    });
+
+    return value;
+}
+
+// API-FOOTBALL REQUEST
+async function footballAPI(endpoint, parameters = {}) {
+    if (!API_KEY) {
+        const error = new Error(
+            "API key is missing. Add API_FOOTBALL_KEY in Render Environment."
+        );
+        error.status = 503;
+        throw error;
+    }
+
+    const query = new URLSearchParams();
+
+    Object.entries(parameters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+            query.set(key, String(value));
+        }
+    });
+
+    const url = `${API_BASE}/${endpoint}?${query.toString()}`;
+
+    const response = await fetch(url, {
+        method: "GET",
+        headers: {
+            "x-apisports-key": API_KEY
+        }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        const error = new Error(
+            `Football API returned HTTP ${response.status}`
+        );
+        error.status = 502;
+        throw error;
+    }
+
+    if (data.errors && Object.keys(data.errors).length > 0) {
+        const details = Object.values(data.errors).join("; ");
+        const error = new Error(details || "Football API request failed.");
+        error.status = 502;
+        throw error;
+    }
+
+    return data;
+}
+
+// GET CURRENT SEASON FOR A COMPETITION
+async function getCompetitionSeason(slug) {
+    const competition = competitions[slug];
+
+    if (!competition) {
+        throw new Error("Competition not found.");
+    }
+
+    return cached(`season-${slug}`, 24 * 60 * 60 * 1000, async () => {
+        const data = await footballAPI("leagues", {
+            id: competition.id
+        });
+
+        const league = data.response?.[0];
+
+        if (!league || !league.seasons?.length) {
+            throw new Error(
+                `No season information available for ${competition.name}.`
+            );
+        }
+
+        const seasons = [...league.seasons].sort(
+            (a, b) => b.year - a.year
+        );
+
+        const selectedSeason =
+            seasons.find(season => season.current) || seasons[0];
+
+        return selectedSeason.year;
+    });
+}
+
+// GET TEAMS FOR ONE COMPETITION
+async function getCompetitionTeams(slug) {
+    const competition = competitions[slug];
+
+    if (!competition) {
+        throw new Error("Competition not found.");
+    }
+
+    return cached(`teams-${slug}`, 12 * 60 * 60 * 1000, async () => {
+        const season = await getCompetitionSeason(slug);
+
+        const data = await footballAPI("teams", {
+            league: competition.id,
+            season
+        });
+
+        return {
+            competition: {
+                slug,
+                name: competition.name,
+                country: competition.country,
+                icon: competition.icon,
+                id: competition.id,
+                season
+            },
+            teams: (data.response || []).map(item => ({
+                id: item.team.id,
+                name: item.team.name,
+                code: item.team.code,
+                country: item.team.country,
+                founded: item.team.founded,
+                national: item.team.national,
+                logo: item.team.logo,
+                venue: {
+                    id: item.venue?.id,
+                    name: item.venue?.name,
+                    address: item.venue?.address,
+                    city: item.venue?.city,
+                    capacity: item.venue?.capacity,
+                    surface: item.venue?.surface,
+                    image: item.venue?.image
+                }
+            }))
+        };
+    });
+}
+
+// GET TEAM PROFILE AND SQUAD
+async function getTeamProfile(teamId) {
+    return cached(`team-profile-${teamId}`, 6 * 60 * 60 * 1000, async () => {
+        const [teamData, squadData] = await Promise.all([
+            footballAPI("teams", { id: teamId }),
+            footballAPI("players/squads", { team: teamId })
+        ]);
+
+        const item = teamData.response?.[0];
+
+        if (!item) {
+            throw new Error("Team not found.");
+        }
+
+        const squad = squadData.response?.[0]?.players || [];
+
+        return {
+            team: {
+                id: item.team.id,
+                name: item.team.name,
+                code: item.team.code,
+                country: item.team.country,
+                founded: item.team.founded,
+                national: item.team.national,
+                logo: item.team.logo,
+                venue: item.venue || {}
+            },
+            squad: squad.map(player => ({
+                id: player.id,
+                name: player.name,
+                age: player.age,
+                number: player.number,
+                position: player.position,
+                photo: player.photo
+            }))
+        };
+    });
+}
+
+// FORMAT FIXTURE DATA
+function formatFixture(item) {
+    return {
+        id: item.fixture.id,
+        date: item.fixture.date,
+        timestamp: item.fixture.timestamp,
+        status: item.fixture.status?.short,
+        elapsed: item.fixture.status?.elapsed,
+        competition: item.league?.name,
+        leagueId: item.league?.id,
+        homeTeam: item.teams?.home?.name,
+        homeLogo: item.teams?.home?.logo,
+        homeId: item.teams?.home?.id,
+        homeScore: item.goals?.home,
+        awayTeam: item.teams?.away?.name,
+        awayLogo: item.teams?.away?.logo,
+        awayId: item.teams?.away?.id,
+        awayScore: item.goals?.away,
+        venue: item.fixture?.venue?.name
+    };
+}
 
 // API HOME
 app.get("/api", (req, res) => {
@@ -41,52 +286,248 @@ app.get("/api/health", (req, res) => {
     res.json({
         success: true,
         status: "healthy",
+        apiKeyConfigured: Boolean(API_KEY),
         platform: platform.name,
         timestamp: new Date().toISOString()
     });
 });
 
-// LIVE MATCHES
-app.get("/api/matches/live", (req, res) => {
+// LIST ALL COMPETITIONS
+app.get("/api/competitions", (req, res) => {
+    const list = Object.entries(competitions).map(([slug, item]) => ({
+        slug,
+        ...item
+    }));
+
     res.json({
         success: true,
-        count: liveMatches.length,
-        matches: liveMatches
+        count: list.length,
+        competitions: list
     });
 });
 
-// FIXTURES
-app.get("/api/matches/fixtures", (req, res) => {
-    res.json({
-        success: true,
-        count: fixtures.length,
-        fixtures
-    });
+// GET TEAMS FOR A COMPETITION
+app.get("/api/leagues/:slug/teams", async (req, res, next) => {
+    try {
+        const result = await getCompetitionTeams(req.params.slug);
+
+        res.json({
+            success: true,
+            ...result
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// GET STANDINGS
+app.get("/api/leagues/:slug/standings", async (req, res, next) => {
+    try {
+        const competition = competitions[req.params.slug];
+
+        if (!competition) {
+            return res.status(404).json({
+                success: false,
+                message: "Competition not found."
+            });
+        }
+
+        const season = await getCompetitionSeason(req.params.slug);
+
+        const result = await cached(
+            `standings-${req.params.slug}`,
+            60 * 60 * 1000,
+            () => footballAPI("standings", {
+                league: competition.id,
+                season
+            })
+        );
+
+        res.json({
+            success: true,
+            competition: competition.name,
+            season,
+            standings: result.response || []
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// GET FIXTURES FOR A COMPETITION
+app.get("/api/leagues/:slug/fixtures", async (req, res, next) => {
+    try {
+        const competition = competitions[req.params.slug];
+
+        if (!competition) {
+            return res.status(404).json({
+                success: false,
+                message: "Competition not found."
+            });
+        }
+
+        const season = await getCompetitionSeason(req.params.slug);
+
+        const result = await cached(
+            `fixtures-${req.params.slug}`,
+            60 * 60 * 1000,
+            () => footballAPI("fixtures", {
+                league: competition.id,
+                season,
+                next: 10,
+                timezone: "Africa/Nairobi"
+            })
+        );
+
+        const fixtures = (result.response || []).map(formatFixture);
+
+        res.json({
+            success: true,
+            competition: competition.name,
+            season,
+            count: fixtures.length,
+            fixtures
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// GET INDIVIDUAL TEAM PROFILE
+app.get("/api/teams/:id", async (req, res, next) => {
+    try {
+        const teamId = Number(req.params.id);
+
+        if (!Number.isInteger(teamId) || teamId <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid team ID."
+            });
+        }
+
+        const profile = await getTeamProfile(teamId);
+
+        res.json({
+            success: true,
+            ...profile
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// LIVE MATCHES ACROSS ALL SIX COMPETITIONS
+app.get("/api/matches/live", async (req, res, next) => {
+    try {
+        const allowedLeagueIds = new Set(
+            Object.values(competitions).map(item => item.id)
+        );
+
+        const result = await cached(
+            "all-live-matches",
+            5 * 60 * 1000,
+            () => footballAPI("fixtures", { live: "all" })
+        );
+
+        const matches = (result.response || [])
+            .filter(item => allowedLeagueIds.has(item.league?.id))
+            .map(formatFixture);
+
+        res.json({
+            success: true,
+            count: matches.length,
+            matches
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// UPCOMING FIXTURES ACROSS ALL SIX COMPETITIONS
+app.get("/api/matches/fixtures", async (req, res, next) => {
+    try {
+        const results = await Promise.allSettled(
+            Object.keys(competitions).map(async slug => {
+                const competition = competitions[slug];
+                const season = await getCompetitionSeason(slug);
+
+                const fixtureData = await cached(
+                    `fixtures-${slug}`,
+                    60 * 60 * 1000,
+                    () => footballAPI("fixtures", {
+                        league: competition.id,
+                        season,
+                        next: 10,
+                        timezone: "Africa/Nairobi"
+                    })
+                );
+
+                return (fixtureData.response || []).map(formatFixture);
+            })
+        );
+
+        const fixtures = results
+            .filter(result => result.status === "fulfilled")
+            .flatMap(result => result.value)
+            .sort((a, b) => a.timestamp - b.timestamp);
+
+        const failures = results.filter(
+            result => result.status === "rejected"
+        ).length;
+
+        res.json({
+            success: true,
+            count: fixtures.length,
+            fixtures,
+            partial: failures > 0,
+            competitionsUnavailable: failures
+        });
+    } catch (error) {
+        next(error);
+    }
 });
 
 // SINGLE MATCH
-app.get("/api/matches/:id", (req, res) => {
-    const match = [...liveMatches, ...fixtures]
-        .find(item => String(item.id) === req.params.id);
+app.get("/api/matches/:id", async (req, res, next) => {
+    try {
+        const matchId = Number(req.params.id);
 
-    if (!match) {
-        return res.status(404).json({
-            success: false,
-            message: "Match not found"
+        if (!Number.isInteger(matchId) || matchId <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid match ID."
+            });
+        }
+
+        const result = await cached(
+            `match-${matchId}`,
+            60 * 1000,
+            () => footballAPI("fixtures", { id: matchId })
+        );
+
+        const item = result.response?.[0];
+
+        if (!item) {
+            return res.status(404).json({
+                success: false,
+                message: "Match not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            match: formatFixture(item)
         });
+    } catch (error) {
+        next(error);
     }
-
-    res.json({
-        success: true,
-        match
-    });
 });
 
 // STREAMING PLACEHOLDER
 app.get("/api/stream/:matchId", (req, res) => {
     res.status(501).json({
         success: false,
-        message: "Licensed streaming provider not configured",
+        message: "A licensed streaming provider is not configured.",
         matchId: req.params.matchId
     });
 });
@@ -96,11 +537,15 @@ app.get("/api/platform", (req, res) => {
     res.json({
         success: true,
         platform,
+        competitions: Object.keys(competitions),
         features: [
-            "Live football listings",
+            "Real team names and badges",
+            "Club stadium information",
+            "Team squads where available",
+            "Live match listings",
             "Upcoming fixtures",
-            "Match information",
-            "Streaming integration"
+            "League standings",
+            "Match information"
         ]
     });
 });
@@ -109,7 +554,7 @@ app.get("/api/platform", (req, res) => {
 app.use("/api", (req, res) => {
     res.status(404).json({
         success: false,
-        message: "API endpoint not found"
+        message: "API endpoint not found."
     });
 });
 
@@ -120,11 +565,11 @@ app.use((req, res) => {
 
 // ERROR HANDLER
 app.use((error, req, res, next) => {
-    console.error(error);
+    console.error("LUX API ERROR:", error.message);
 
-    res.status(500).json({
+    res.status(error.status || 500).json({
         success: false,
-        message: "Internal server error"
+        message: error.message || "Internal server error."
     });
 });
 
@@ -134,5 +579,6 @@ app.listen(PORT, "0.0.0.0", () => {
     console.log("LUX LIVE FOOTBALL");
     console.log("Server successfully started");
     console.log("Port:", PORT);
+    console.log("Football API key:", API_KEY ? "Configured" : "MISSING");
     console.log("================================");
 });
