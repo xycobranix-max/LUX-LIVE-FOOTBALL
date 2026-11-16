@@ -169,58 +169,83 @@
 
         </section>
 
+        <section class="leagues-section">
 
-        <section class="section" id="homeLeagues">
+    <div class="section-heading">
+        <div>
+            <span class="section-subtitle">FOLLOW YOUR FAVOURITES</span>
+            <h2>Popular Leagues</h2>
+        </div>
+    </div>
 
-            <div class="section-heading">
-                <div>
-                    <span class="section-subtitle">FOLLOW YOUR FAVOURITES</span>
-                    <h2>Popular Leagues</h2>
-                </div>
-            </div>
+    <div class="leagues-grid">
 
-            <div class="leagues-grid">
+        <div class="league-card" onclick="openLeague('premier-league')">
+            <span>🏆</span>
+            <h3>Premier League</h3>
+            <p>England</p>
+            <small>Explore Clubs →</small>
+        </div>
 
-                <div class="league-card">
-                    <span>🏆</span>
-                    <h3>Premier League</h3>
-                    <p>England</p>
-                </div>
+        <div class="league-card" onclick="openLeague('la-liga')">
+            <span>🏆</span>
+            <h3>La Liga</h3>
+            <p>Spain</p>
+            <small>Explore Clubs →</small>
+        </div>
 
-                <div class="league-card">
-                    <span>🏆</span>
-                    <h3>La Liga</h3>
-                    <p>Spain</p>
-                </div>
+        <div class="league-card" onclick="openLeague('serie-a')">
+            <span>🏆</span>
+            <h3>Serie A</h3>
+            <p>Italy</p>
+            <small>Explore Clubs →</small>
+        </div>
 
-                <div class="league-card">
-                    <span>🏆</span>
-                    <h3>Serie A</h3>
-                    <p>Italy</p>
-                </div>
+        <div class="league-card" onclick="openLeague('bundesliga')">
+            <span>🏆</span>
+            <h3>Bundesliga</h3>
+            <p>Germany</p>
+            <small>Explore Clubs →</small>
+        </div>
 
-                <div class="league-card">
-                    <span>🏆</span>
-                    <h3>Bundesliga</h3>
-                    <p>Germany</p>
-                </div>
+        <div class="league-card" onclick="openLeague('champions-league')">
+            <span>🏆</span>
+            <h3>Champions League</h3>
+            <p>Europe</p>
+            <small>Explore Clubs →</small>
+        </div>
 
-                <div class="league-card">
-                    <span>🏆</span>
-                    <h3>Champions League</h3>
-                    <p>Europe</p>
-                </div>
+        <div class="league-card" onclick="openLeague('afcon')">
+            <span>🌍</span>
+            <h3>AFCON</h3>
+            <p>Africa</p>
+            <small>Explore Teams →</small>
+        </div>
 
-                <div class="league-card">
-                    <span>🌍</span>
-                    <h3>AFCON</h3>
-                    <p>Africa</p>
-                </div>
+    </div>
 
-            </div>
+</section>
 
-        </section>
+<!-- LEAGUE DETAILS PAGE -->
+<section id="leagueDetailsPage" class="league-details-page" style="display:none;">
 
+    <button onclick="closeLeague()" class="back-button">
+        ← Back to Home
+    </button>
+
+    <div class="league-details-heading">
+        <span id="leagueIcon">🏆</span>
+        <div>
+            <h2 id="leagueTitle">League</h2>
+            <p id="leagueCountry">Teams</p>
+        </div>
+    </div>
+
+    <h3>Participating Teams</h3>
+
+    <div id="leagueTeams" class="league-teams-grid"></div>
+
+</section>
 
         <section class="about-section">
             <h2>MORE THAN JUST FOOTBALL.</h2>
