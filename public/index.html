@@ -529,30 +529,46 @@
 <!-- PAGE NAVIGATION SYSTEM -->
 <script>
 (function () {
+    "use strict";
 
     const pages = ["home", "live", "fixtures", "highlights"];
 
-    function openPage(page, updateHistory = true) {
+    const dashboardToggle = document.getElementById("dashboardToggle");
+    const dashboardPanel = document.getElementById("dashboardPanel");
+    const dashboardOverlay = document.getElementById("dashboardOverlay");
+    const dashboardClose = document.getElementById("dashboardClose");
 
+    function closeExtraPages() {
+        const leaguePage = document.getElementById("leagueDetailsPage");
+        const teamPage = document.getElementById("teamProfilePage");
+
+        if (leaguePage) leaguePage.hidden = true;
+        if (teamPage) teamPage.hidden = true;
+    }
+
+    function openPage(page, updateHistory = true) {
         if (!pages.includes(page)) {
             page = "home";
         }
 
-        // Hide all pages
+        // Hide league and team profile pages
+        closeExtraPages();
+
+        // Hide all normal pages
         document.querySelectorAll("[data-page-section]").forEach(section => {
             section.hidden = true;
         });
 
         // Show selected page
         const selectedPage = document.querySelector(
-            '[data-page-section="' + page + '"]'
+            `[data-page-section="${page}"]`
         );
 
         if (selectedPage) {
             selectedPage.hidden = false;
         }
 
-        // Update active dashboard button
+        // Update active dashboard navigation link
         document.querySelectorAll("[data-page-link]").forEach(link => {
             const active = link.dataset.pageLink === page;
 
@@ -565,34 +581,72 @@
             }
         });
 
-        // Update browser URL
+        // Update browser history
         if (updateHistory) {
             const url = page === "home"
                 ? window.location.pathname
                 : "?page=" + page;
 
-            window.history.pushState({ page: page }, "", url);
+            window.history.pushState({ page }, "", url);
         }
 
-        // Start every page at the top
+        // Close dashboard after navigation
+        closeDashboard();
+
+        // Return to top
         window.scrollTo({
             top: 0,
-            behavior: "instant"
+            behavior: "auto"
         });
 
-        document.title =
-            page.toUpperCase() + " | LUX LIVE FOOTBALL";
+        document.title = page.toUpperCase() + " | LUX LIVE FOOTBALL";
     }
 
+    // Open dashboard
+    function openDashboard() {
+        if (!dashboardPanel || !dashboardOverlay) return;
 
-    // Handle navigation clicks
+        dashboardPanel.classList.add("open");
+        dashboardOverlay.classList.add("open");
+        document.body.classList.add("dashboard-open");
+
+        if (dashboardToggle) {
+            dashboardToggle.setAttribute("aria-expanded", "true");
+        }
+    }
+
+    // Close dashboard
+    function closeDashboard() {
+        if (dashboardPanel) dashboardPanel.classList.remove("open");
+        if (dashboardOverlay) dashboardOverlay.classList.remove("open");
+
+        document.body.classList.remove("dashboard-open");
+
+        if (dashboardToggle) {
+            dashboardToggle.setAttribute("aria-expanded", "false");
+        }
+    }
+
+    // Dashboard buttons
+    if (dashboardToggle) {
+        dashboardToggle.addEventListener("click", openDashboard);
+    }
+
+    if (dashboardClose) {
+        dashboardClose.addEventListener("click", closeDashboard);
+    }
+
+    if (dashboardOverlay) {
+        dashboardOverlay.addEventListener("click", closeDashboard);
+    }
+
+    // Navigation links, including footer links
     document.addEventListener("click", function (event) {
-
         const link = event.target.closest('a[href*="?page="]');
 
         if (!link) return;
 
-        const url = new URL(link.href);
+        const url = new URL(link.href, window.location.origin);
 
         if (url.origin !== window.location.origin) return;
 
@@ -603,8 +657,7 @@
         openPage(page);
     });
 
-
-    // Handle Android/browser Back and Forward buttons
+    // Browser and Android back/forward navigation
     window.addEventListener("popstate", function () {
         const page =
             new URLSearchParams(window.location.search).get("page") || "home";
@@ -612,64 +665,26 @@
         openPage(page, false);
     });
 
+    // Escape key closes dashboard
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeDashboard();
+        }
+    });
 
-    // Set the copyright year
+    // Copyright year
     const year = document.getElementById("year");
 
     if (year) {
         year.textContent = new Date().getFullYear();
     }
 
-
-    // Open the correct page on initial loading
+    // Open requested page on initial loading
     const initialPage =
         new URLSearchParams(window.location.search).get("page") || "home";
 
     openPage(initialPage, false);
 
-// DASHBOARD SLIDE-OUT CONTROLS
-
-const dashboardToggle =
-    document.getElementById("dashboardToggle");
-
-const dashboardPanel =
-    document.getElementById("dashboardPanel");
-
-const dashboardOverlay =
-    document.getElementById("dashboardOverlay");
-
-const dashboardClose =
-    document.getElementById("dashboardClose");
-
-function openDashboard() {
-    dashboardPanel.classList.add("open");
-    dashboardOverlay.classList.add("open");
-    document.body.classList.add("dashboard-open");
-
-    dashboardToggle.setAttribute("aria-expanded", "true");
-}
-
-function closeDashboard() {
-    dashboardPanel.classList.remove("open");
-    dashboardOverlay.classList.remove("open");
-    document.body.classList.remove("dashboard-open");
-
-    dashboardToggle.setAttribute("aria-expanded", "false");
-}
-
-dashboardToggle.addEventListener("click", openDashboard);
-dashboardClose.addEventListener("click", closeDashboard);
-dashboardOverlay.addEventListener("click", closeDashboard);
-
-// Close after selecting a page
-dashboardPanel.querySelectorAll("a[data-page-link]").forEach(link => {
-    link.addEventListener("click", closeDashboard);
-});
-
-// Close with phone back/keyboard Escape
-document.addEventListener("keydown", event => {
-    if (event.key === "Escape") closeDashboard();
-});
 })();
 </script>
 
