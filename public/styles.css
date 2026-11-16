@@ -803,3 +803,24 @@ body.dashboard-open {
         font-size: 22px;
     }
 }
+
+
+/* REAL FOOTBALL TEAM BADGES */
+
+.team-badge {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.league-team-card {
+    align-items: center;
+}
+
+.match-card .team-logo {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
