@@ -386,16 +386,43 @@ async function login() {
 // LOAD LEAGUE TEAMS FROM API
 // =========================================
 
+
 async function openLeague(leagueId) {
     const league = leagueData[leagueId];
 
-    if (!league) return;
+    if (!league) {
+        console.error("Competition not found:", leagueId);
+        return;
+    }
+
+    // Goal API database IDs
+    const goalLeagueIds = {
+        "premier-league": "cmr77dvkr005nrx06lp7rvp49",
+        "la-liga": "cmr77dvnt006nrx063v3w622e",
+        "serie-a": "cmr77dvpd006yrx06zig7907g",
+        "bundesliga": "cmr77dvgm0002rx06rt2uqxii",
+        "champions-league": "cmr77dw3900f5rx06j05wgzv4",
+        "afcon": "cmr77dvhf0015rx069i57rsbo"
+    };
+
+    const goalLeagueId = goalLeagueIds[leagueId];
+
+    if (!goalLeagueId) {
+        console.error("Goal API ID missing:", leagueId);
+        return;
+    }
 
     currentLeagueId = leagueId;
 
     const home = document.getElementById("homePage");
     const details = document.getElementById("leagueDetailsPage");
     const profile = document.getElementById("teamProfilePage");
+    const teamsContainer = document.getElementById("leagueTeams");
+
+    if (!details || !teamsContainer) {
+        console.error("League details HTML elements are missing.");
+        return;
+    }
 
     document.querySelectorAll("[data-page-section]").forEach(page => {
         page.hidden = true;
@@ -411,13 +438,9 @@ async function openLeague(leagueId) {
     document.getElementById("leagueCountry").textContent =
         league.country + " · Loading teams...";
 
-    const teamsContainer = document.getElementById("leagueTeams");
-
     teamsContainer.innerHTML = `
-        <div class="empty-state">
-            <span>⚽</span>
-            <h3>Loading ${escapeHTML(league.name)}...</h3>
-            <p>Connecting to live football data.</p>
+        <div class="loading-state">
+            <p>⚽ Loading ${league.name} teams...</p>
         </div>
     `;
 
@@ -425,30 +448,30 @@ async function openLeague(leagueId) {
 
     try {
         const result = await apiRequest(
-            `/api/leagues/${encodeURIComponent(leagueId)}/teams`
+            `/api/goal/leagues/${encodeURIComponent(goalLeagueId)}/teams`
         );
 
         if (currentLeagueId !== leagueId) return;
 
-        const teams = result.teams || [];
+        const teams = result.data || [];
 
         document.getElementById("leagueCountry").textContent =
-            `${league.country} · ${result.competition.season} Season · ${teams.length} Teams`;
+            `${league.country} · ${teams.length} Teams`;
 
         teamsContainer.replaceChildren();
 
         if (!teams.length) {
             teamsContainer.innerHTML = `
-                <div class="empty-state">
-                    <h3>No teams available</h3>
-                    <p>This competition has no team data available for this season.</p>
-                </div>
+                <p class="empty-state">
+                    No teams are currently available for this competition.
+                </p>
             `;
             return;
         }
 
         teams.forEach((team, index) => {
             const card = document.createElement("div");
+
             card.className = "league-team-card";
             card.style.cursor = "pointer";
             card.setAttribute("role", "button");
@@ -460,15 +483,17 @@ async function openLeague(leagueId) {
             const logo = document.createElement("img");
             logo.className = "team-badge";
             logo.src = team.logo || "";
-            logo.alt = team.name;
+            logo.alt = team.name || "Team";
             logo.loading = "lazy";
 
             logo.onerror = () => {
-                logo.replaceWith(document.createTextNode("⚽"));
+                logo.replaceWith(
+                    document.createTextNode("⚽")
+                );
             };
 
             const name = document.createElement("strong");
-            name.textContent = team.name;
+            name.textContent = team.name || "Unknown Team";
 
             const arrow = document.createElement("span");
             arrow.textContent = "›";
@@ -490,18 +515,19 @@ async function openLeague(leagueId) {
         });
 
     } catch (error) {
-        console.error("League teams:", error.message);
+        console.error("League teams error:", error);
+
+        if (currentLeagueId !== leagueId) return;
 
         teamsContainer.innerHTML = `
-            <div class="empty-state">
-                <span>⚠️</span>
-                <h3>Unable to load teams</h3>
-                <p>${escapeHTML(error.message)}</p>
-                <button class="watch-btn" onclick="openLeague('${escapeAttribute(leagueId)}')">
-                    Try Again
-                </button>
-            </div>
+            <p class="error-state">
+                Unable to load teams.
+                Please try again later.
+            </p>
         `;
+
+        document.getElementById("leagueCountry").textContent =
+            league.country + " · Teams unavailable";
     }
 }
 
