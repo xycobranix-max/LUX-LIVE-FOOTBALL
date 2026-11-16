@@ -148,6 +148,33 @@ async function footballAPI(endpoint, parameters = {}) {
     return data;
 }
 
+
+// =========================================
+// GOAL API CONNECTION
+// =========================================
+
+async function goalAPI(endpoint) {
+    if (!GOAL_API_KEY) {
+        throw new Error("GOAL_API_KEY is not configured");
+    }
+
+    const response = await fetch(`${GOAL_API_BASE}${endpoint}`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${GOAL_API_KEY}`,
+            "Accept": "application/json"
+        }
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Goal API error ${response.status}: ${errorText}`);
+    }
+
+    return await response.json();
+}
+
+
 // GET AN ACCESSIBLE SEASON FOR A COMPETITION
 async function getCompetitionSeason(slug) {
     const competition = competitions[slug];
@@ -615,6 +642,32 @@ app.use((error, req, res, next) => {
         success: false,
         message: error.message || "Internal server error."
     });
+});
+
+
+// =========================================
+// GOAL API LEAGUE TEAMS
+// =========================================
+
+app.get("/api/goal/leagues/:leagueId/teams", async (req, res) => {
+    try {
+        const { leagueId } = req.params;
+
+        const data = await goalAPI(
+            `/leagues/${encodeURIComponent(leagueId)}/teams`
+        );
+
+        res.json(data);
+
+    } catch (error) {
+        console.error("Goal API Error:", error.message);
+
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve teams from Goal API",
+            error: error.message
+        });
+    }
 });
 
 // START SERVER
