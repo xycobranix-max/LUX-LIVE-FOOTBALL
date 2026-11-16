@@ -646,6 +646,68 @@ app.get("/api/goal/leagues/:leagueId/teams", async (req, res) => {
     }
 });
 
+
+/* =========================================
+   GOAL API - LEAGUE FIXTURES
+========================================= */
+
+app.get("/api/goal/leagues/:leagueId/fixtures", async (req, res) => {
+    try {
+        const data = await goalAPI(
+            `/leagues/${encodeURIComponent(req.params.leagueId)}/fixtures`
+        );
+        res.json(data);
+    } catch (error) {
+        console.error("Goal fixtures error:", error.message);
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve league fixtures",
+            error: error.message
+        });
+    }
+});
+
+/* =========================================
+   GOAL API - TEAM RESULTS
+========================================= */
+
+app.get("/api/goal/teams/:teamId/results", async (req, res) => {
+    try {
+        const data = await goalAPI(
+            `/teams/${encodeURIComponent(req.params.teamId)}/results`
+        );
+        res.json(data);
+    } catch (error) {
+        console.error("Goal results error:", error.message);
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve team results",
+            error: error.message
+        });
+    }
+});
+
+/* =========================================
+   GOAL API - TEAM UPCOMING MATCHES
+========================================= */
+
+app.get("/api/goal/teams/:teamId/upcoming", async (req, res) => {
+    try {
+        const data = await goalAPI(
+            `/teams/${encodeURIComponent(req.params.teamId)}/upcoming`
+        );
+        res.json(data);
+    } catch (error) {
+        console.error("Goal upcoming error:", error.message);
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve upcoming team matches",
+            error: error.message
+        });
+    }
+});
+
+
 // API NOT FOUND
 app.use("/api", (req, res) => {
     res.status(404).json({
