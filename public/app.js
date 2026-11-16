@@ -535,178 +535,251 @@ async function openLeague(leagueId) {
 // INDIVIDUAL TEAM PROFILE
 // =========================================
 
+
 async function openTeam(team) {
-    const profile = document.getElementById("teamProfilePage");
-    const details = document.getElementById("leagueDetailsPage");
+    const profilePage = document.getElementById("teamProfilePage");
+    const leaguePage = document.getElementById("leagueDetailsPage");
 
-    details.hidden = true;
-    profile.hidden = false;
-
-    const logo = document.getElementById("teamProfileLogo");
-
-    document.getElementById("teamProfileName").textContent = team.name;
-
-    document.getElementById("teamProfileLeague").textContent =
-        leagueData[currentLeagueId].name + " · " +
-        leagueData[currentLeagueId].country;
-
-    document.getElementById("teamProfileCountry").textContent =
-        team.country || leagueData[currentLeagueId].country;
-
-    document.getElementById("teamProfileCompetition").textContent =
-        leagueData[currentLeagueId].name;
-
-    logo.textContent = "⚽";
-
-    if (team.logo) {
-        logo.innerHTML = `
-            <img
-                src="${escapeAttribute(team.logo)}"
-                alt="${escapeHTML(team.name)}"
-                style="width:100%;height:100%;object-fit:contain;padding:12px;"
-            >
-        `;
+    if (!profilePage) {
+        console.error("Team profile page not found.");
+        return;
     }
 
-    document.getElementById("teamProfileDescription").textContent =
-        `Explore ${team.name}, its stadium, squad and football information.`;
+    // Hide other pages and show team profile
+    document.querySelectorAll("[data-page-section]").forEach(page => {
+        page.hidden = true;
+    });
 
-    const content = document.querySelector(
-        "#teamProfilePage .team-profile-content"
-    );
+    document.getElementById("homePage")?.setAttribute("hidden", "");
+    leaguePage?.setAttribute("hidden", "");
 
-    let extra = document.getElementById("teamProfileExtra");
+    profilePage.hidden = false;
 
-    if (!extra) {
-        extra = document.createElement("div");
-        extra.id = "teamProfileExtra";
-        content.appendChild(extra);
-    }
+    const teamId = team.id;
+    const teamName = team.name || "Football Club";
 
-    extra.innerHTML = `
-        <div class="empty-state">
-            <span>⚽</span>
-            <h3>Loading team information...</h3>
+    const badge = team.badge || team.logo || "";
+    const country = team.country || "Unknown";
+    const founded = team.founded || "Unknown";
+
+    // Basic team information
+    profilePage.innerHTML = `
+        <div class="team-profile-container">
+
+            <button class="back-button" onclick="closeTeam()">
+                ← Back to Teams
+            </button>
+
+            <div class="team-profile-header">
+
+                ${badge ? `
+                    <img src="${badge}"
+                         alt="${teamName}"
+                         class="team-profile-logo">
+                ` : ""}
+
+                <h1>${teamName}</h1>
+
+                <p>${country}</p>
+
+                <div class="team-basic-info">
+                    <span>Founded: ${founded}</span>
+                    <span>Team ID: ${teamId}</span>
+                </div>
+
+            </div>
+
+            <div class="team-stadium-card">
+                <h2>🏟️ Stadium Information</h2>
+
+                <p id="teamVenue">
+                    Stadium: ${team.venueName || "Not available"}
+                </p>
+
+                <p id="teamVenueCity">
+                    Location: ${team.venueCity || "Not available"}
+                </p>
+
+                <p>
+                    Capacity: ${
+                        team.venueCapacity
+                        ? Number(team.venueCapacity).toLocaleString()
+                        : "Not available"
+                    }
+                </p>
+
+                <p>
+                    Surface: ${team.venueSurface || "Not available"}
+                </p>
+            </div>
+
+            <div class="team-matches-section">
+
+                <h2>📊 Recent Results</h2>
+
+                <div id="teamRecentResults">
+                    Loading recent results...
+                </div>
+
+                <h2>📅 Upcoming Fixtures</h2>
+
+                <div id="teamUpcomingFixtures">
+                    Loading upcoming fixtures...
+                </div>
+
+            </div>
+
         </div>
     `;
 
-    window.scrollTo(0, 0);
+    // Escape HTML from API-provided values
+    const escapeHTML = value => String(value ?? "")
+        .replace(/[&<>"']/g, char => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        })[char]);
+
+    // Render match cards
+    function renderMatches(matches, emptyMessage) {
+        if (!Array.isArray(matches) || matches.length === 0) {
+            return `<p>${escapeHTML(emptyMessage)}</p>`;
+        }
+
+        return matches.map(match => {
+            const home = match.homeTeamName || match.homeTeam?.name || "Home";
+            const away = match.awayTeamName || match.awayTeam?.name || "Away";
+
+            const homeScore = match.homeTeamScore;
+            const awayScore = match.awayTeamScore;
+
+            const finished = match.matchStatus === "FINISHED";
+
+            const score = homeScore !== null && homeScore !== undefined &&
+                          awayScore !== null && awayScore !== undefined
+                ? `${escapeHTML(homeScore)} - ${escapeHTML(awayScore)}`
+                : "VS";
+
+            const date = match.matchDate || "";
+            const time = match.matchTime || "";
+            const competition = match.leagueName || "Competition";
+            const stadium = match.matchStadium || "";
+
+            const homeBadge = match.teamHomeBadge || match.homeTeam?.badge || "";
+            const awayBadge = match.teamAwayBadge || match.awayTeam?.badge || "";
+
+            return `
+                <div class="team-match-card">
+
+                    <p class="match-competition">
+                        ${escapeHTML(competition)}
+                    </p>
+
+                    <div class="team-match-teams">
+
+                        <div class="match-team">
+                            ${homeBadge ? `
+                                <img src="${escapeHTML(homeBadge)}"
+                                     alt=""
+                                     class="match-team-logo">
+                            ` : ""}
+                            <strong>${escapeHTML(home)}</strong>
+                        </div>
+
+                        <div class="match-score">
+                            <strong>${score}</strong>
+                            <small>
+                                ${finished ? "FT" : escapeHTML(match.matchStatus || "Scheduled")}
+                            </small>
+                        </div>
+
+                        <div class="match-team">
+                            ${awayBadge ? `
+                                <img src="${escapeHTML(awayBadge)}"
+                                     alt=""
+                                     class="match-team-logo">
+                            ` : ""}
+                            <strong>${escapeHTML(away)}</strong>
+                        </div>
+
+                    </div>
+
+                    <p class="match-date">
+                        ${escapeHTML(date)} ${escapeHTML(time)}
+                    </p>
+
+                    ${stadium ? `
+                        <p class="match-stadium">
+                            🏟️ ${escapeHTML(stadium)}
+                        </p>
+                    ` : ""}
+
+                </div>
+            `;
+        }).join("");
+    }
+
+    // Load results and upcoming fixtures
+    const resultsElement = document.getElementById("teamRecentResults");
+    const upcomingElement = document.getElementById("teamUpcomingFixtures");
 
     try {
-        const result = await apiRequest(`/api/teams/${team.id}`);
+        const [resultsResponse, upcomingResponse] =
+            await Promise.allSettled([
+                apiRequest(
+                    `/api/goal/teams/${encodeURIComponent(teamId)}/results`
+                ),
+                apiRequest(
+                    `/api/goal/teams/${encodeURIComponent(teamId)}/upcoming`
+                )
+            ]);
 
-        const club = result.team;
-        const venue = club.venue || {};
-        const squad = result.squad || [];
+        if (resultsResponse.status === "fulfilled") {
+            const results = resultsResponse.value.data || [];
 
-        document.getElementById("teamProfileName").textContent =
-            club.name;
+            resultsElement.innerHTML = renderMatches(
+                results,
+                "No recent results available."
+            );
+        } else {
+            resultsElement.innerHTML =
+                "<p>Unable to load recent results.</p>";
 
-        document.getElementById("teamProfileCountry").textContent =
-            club.country || "Not available";
+            console.error("Results error:", resultsResponse.reason);
+        }
 
-        document.getElementById("teamProfileDescription").textContent =
-            `${club.name} is a ${club.national ? "national team" : "football club"}. ` +
-            `Explore its home ground and available squad information below.`;
+        if (upcomingResponse.status === "fulfilled") {
+            const upcoming = upcomingResponse.value.data || [];
 
-        logo.innerHTML = club.logo
-            ? `<img src="${escapeAttribute(club.logo)}"
-                alt="${escapeHTML(club.name)}"
-                style="width:100%;height:100%;object-fit:contain;padding:12px;">`
-            : "⚽";
+            upcomingElement.innerHTML = renderMatches(
+                upcoming,
+                "No upcoming fixtures available."
+            );
+        } else {
+            upcomingElement.innerHTML =
+                "<p>Unable to load upcoming fixtures.</p>";
 
-        extra.innerHTML = `
-            <h2>Stadium Information</h2>
-
-            <div class="team-profile-grid">
-
-                <div class="team-info-card">
-                    <span>🏟️</span>
-                    <h3>Home Stadium</h3>
-                    <p>${escapeHTML(venue.name || "Not available")}</p>
-                </div>
-
-                <div class="team-info-card">
-                    <span>📍</span>
-                    <h3>City</h3>
-                    <p>${escapeHTML(venue.city || "Not available")}</p>
-                </div>
-
-                <div class="team-info-card">
-                    <span>👥</span>
-                    <h3>Stadium Capacity</h3>
-                    <p>${venue.capacity
-                        ? Number(venue.capacity).toLocaleString()
-                        : "Not available"
-                    }</p>
-                </div>
-
-                <div class="team-info-card">
-                    <span>📅</span>
-                    <h3>Founded</h3>
-                    <p>${escapeHTML(club.founded || "Not available")}</p>
-                </div>
-
-            </div>
-
-            <h2>Squad Information</h2>
-
-            <p>${squad.length} players returned by the football data provider.</p>
-
-            <div class="team-profile-grid">
-                ${squad.length
-                    ? squad.map(player => `
-                        <div class="team-info-card">
-                            ${player.photo
-                                ? `<img src="${escapeAttribute(player.photo)}"
-                                    alt="${escapeHTML(player.name)}"
-                                    loading="lazy"
-                                    style="width:65px;height:65px;object-fit:cover;border-radius:50%;">`
-                                : ""
-                            }
-                            <h3>${escapeHTML(player.name)}</h3>
-                            <p>
-                                ${escapeHTML(player.position || "Player")}
-                                ${player.number != null
-                                    ? " · #" + escapeHTML(player.number)
-                                    : ""
-                                }
-                            </p>
-                            <p>${player.age != null
-                                ? escapeHTML(player.age) + " years"
-                                : ""
-                            }</p>
-                        </div>
-                    `).join("")
-                    : `
-                        <div class="team-info-card">
-                            <p>Squad information is not currently available.</p>
-                        </div>
-                    `
-                }
-            </div>
-
-            <h2>More Team Information</h2>
-
-            <div class="team-info-card">
-                <p><strong>Country:</strong> ${escapeHTML(club.country || "Not available")}</p>
-                <p><strong>Club code:</strong> ${escapeHTML(club.code || "Not available")}</p>
-                <p><strong>Team ID:</strong> ${escapeHTML(club.id)}</p>
-            </div>
-        `;
+            console.error("Upcoming fixtures error:", upcomingResponse.reason);
+        }
 
     } catch (error) {
-        console.error("Team profile:", error.message);
+        console.error("Team profile error:", error);
 
-        extra.innerHTML = `
-            <div class="empty-state">
-                <span>⚠️</span>
-                <h3>Team details unavailable</h3>
-                <p>${escapeHTML(error.message)}</p>
-            </div>
-        `;
+        resultsElement.innerHTML =
+            "<p>Could not load team information.</p>";
+
+        upcomingElement.innerHTML =
+            "<p>Could not load fixtures.</p>";
     }
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 }
+
 
 // =========================================
 // RETURN TO LEAGUE
