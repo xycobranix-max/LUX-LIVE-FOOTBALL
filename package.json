@@ -1,18 +1,15 @@
+
 {
   "name": "lux-live-football",
   "version": "1.0.0",
-  "private": true,
-  "description": "LUX LIVE FOOTBALL website and streaming platform starter",
+  "description": "LUX LIVE FOOTBALL streaming platform",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
-  },
-  "engines": {
-    "node": ">=20"
+    "start": "node server.js"
   },
   "dependencies": {
-    "dotenv": "^16.4.7",
-    "express": "^5.1.0"
+    "express": "4.21.2",
+    "cors": "2.8.5",
+    "dotenv": "16.4.7"
   }
 }
