@@ -226,27 +226,6 @@
 
 </section>
 
-<!-- LEAGUE DETAILS PAGE -->
-<section id="leagueDetailsPage" class="league-details-page" style="display:none;">
-
-    <button onclick="closeLeague()" class="back-button">
-        ← Back to Home
-    </button>
-
-    <div class="league-details-heading">
-        <span id="leagueIcon">🏆</span>
-        <div>
-            <h2 id="leagueTitle">League</h2>
-            <p id="leagueCountry">Teams</p>
-        </div>
-    </div>
-
-    <h3>Participating Teams</h3>
-
-    <div id="leagueTeams" class="league-teams-grid"></div>
-
-</section>
-
         <section class="about-section">
             <h2>MORE THAN JUST FOOTBALL.</h2>
 
@@ -258,6 +237,30 @@
         </section>
 
     </div>
+
+    <!-- LEAGUE DETAILS PAGE -->
+    <section id="leagueDetailsPage"
+             class="league-details-page"
+             hidden>
+
+        <button onclick="closeLeague()" class="back-button">
+            ← Back to Home
+        </button>
+
+        <div class="league-details-heading">
+            <span id="leagueIcon">🏆</span>
+
+            <div>
+                <h2 id="leagueTitle">League</h2>
+                <p id="leagueCountry">Teams</p>
+            </div>
+        </div>
+
+        <h3>Participating Teams</h3>
+
+        <div id="leagueTeams" class="league-teams-grid"></div>
+
+    </section>
 
 
     <!-- LIVE PAGE -->
