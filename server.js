@@ -10,6 +10,10 @@ const PORT = process.env.PORT || 3000;
 const API_BASE = "https://v3.football.api-sports.io";
 const API_KEY = process.env.API_FOOTBALL_KEY;
 
+// GOAL API CONFIGURATION
+const GOAL_API_BASE = "https://api.goal-api.com/v1";
+const GOAL_API_KEY = process.env.GOAL_API_KEY;
+
 // FREE PLAN SEASONS
 const FREE_PLAN_SEASONS = [2024, 2023, 2022];
 
