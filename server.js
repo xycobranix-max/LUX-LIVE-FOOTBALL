@@ -10,6 +10,9 @@ const PORT = process.env.PORT || 3000;
 const API_BASE = "https://v3.football.api-sports.io";
 const API_KEY = process.env.API_FOOTBALL_KEY;
 
+// FREE PLAN SEASONS
+const FREE_PLAN_SEASONS = [2024, 2023, 2022];
+
 // MIDDLEWARE
 app.use(cors());
 app.use(express.json());
@@ -123,8 +126,17 @@ async function footballAPI(endpoint, parameters = {}) {
     }
 
     if (data.errors && Object.keys(data.errors).length > 0) {
-        const details = Object.values(data.errors).join("; ");
-        const error = new Error(details || "Football API request failed.");
+        const details = Object.values(data.errors)
+            .map(value =>
+                typeof value === "string"
+                    ? value
+                    : JSON.stringify(value)
+            )
+            .join("; ");
+
+        const error = new Error(
+            details || "Football API request failed."
+        );
         error.status = 502;
         throw error;
     }
@@ -132,7 +144,7 @@ async function footballAPI(endpoint, parameters = {}) {
     return data;
 }
 
-// GET CURRENT SEASON FOR A COMPETITION
+// GET AN ACCESSIBLE SEASON FOR A COMPETITION
 async function getCompetitionSeason(slug) {
     const competition = competitions[slug];
 
@@ -140,28 +152,44 @@ async function getCompetitionSeason(slug) {
         throw new Error("Competition not found.");
     }
 
-    return cached(`season-${slug}`, 24 * 60 * 60 * 1000, async () => {
-        const data = await footballAPI("leagues", {
-            id: competition.id
-        });
+    return cached(
+        `season-${slug}`,
+        24 * 60 * 60 * 1000,
+        async () => {
+            const data = await footballAPI("leagues", {
+                id: competition.id
+            });
 
-        const league = data.response?.[0];
+            const league = data.response?.[0];
 
-        if (!league || !league.seasons?.length) {
-            throw new Error(
-                `No season information available for ${competition.name}.`
+            if (!league || !league.seasons?.length) {
+                throw new Error(
+                    `No season information available for ${competition.name}.`
+                );
+            }
+
+            // Only choose seasons supported by the free plan.
+            const accessibleSeasons = league.seasons
+                .filter(season =>
+                    FREE_PLAN_SEASONS.includes(Number(season.year))
+                )
+                .sort((a, b) => b.year - a.year);
+
+            if (accessibleSeasons.length === 0) {
+                throw new Error(
+                    `No season from 2022 to 2024 is listed for ${competition.name}.`
+                );
+            }
+
+            const selectedSeason = accessibleSeasons[0];
+
+            console.log(
+                `${competition.name} selected season: ${selectedSeason.year}`
             );
+
+            return Number(selectedSeason.year);
         }
-
-        const seasons = [...league.seasons].sort(
-            (a, b) => b.year - a.year
-        );
-
-        const selectedSeason =
-            seasons.find(season => season.current) || seasons[0];
-
-        return selectedSeason.year;
-    });
+    );
 }
 
 // GET TEAMS FOR ONE COMPETITION
@@ -172,82 +200,90 @@ async function getCompetitionTeams(slug) {
         throw new Error("Competition not found.");
     }
 
-    return cached(`teams-${slug}`, 12 * 60 * 60 * 1000, async () => {
-        const season = await getCompetitionSeason(slug);
+    return cached(
+        `teams-${slug}`,
+        12 * 60 * 60 * 1000,
+        async () => {
+            const season = await getCompetitionSeason(slug);
 
-        const data = await footballAPI("teams", {
-            league: competition.id,
-            season
-        });
-
-        return {
-            competition: {
-                slug,
-                name: competition.name,
-                country: competition.country,
-                icon: competition.icon,
-                id: competition.id,
+            const data = await footballAPI("teams", {
+                league: competition.id,
                 season
-            },
-            teams: (data.response || []).map(item => ({
-                id: item.team.id,
-                name: item.team.name,
-                code: item.team.code,
-                country: item.team.country,
-                founded: item.team.founded,
-                national: item.team.national,
-                logo: item.team.logo,
-                venue: {
-                    id: item.venue?.id,
-                    name: item.venue?.name,
-                    address: item.venue?.address,
-                    city: item.venue?.city,
-                    capacity: item.venue?.capacity,
-                    surface: item.venue?.surface,
-                    image: item.venue?.image
-                }
-            }))
-        };
-    });
+            });
+
+            return {
+                competition: {
+                    slug,
+                    name: competition.name,
+                    country: competition.country,
+                    icon: competition.icon,
+                    id: competition.id,
+                    season
+                },
+                teams: (data.response || []).map(item => ({
+                    id: item.team.id,
+                    name: item.team.name,
+                    code: item.team.code,
+                    country: item.team.country,
+                    founded: item.team.founded,
+                    national: item.team.national,
+                    logo: item.team.logo,
+                    venue: {
+                        id: item.venue?.id,
+                        name: item.venue?.name,
+                        address: item.venue?.address,
+                        city: item.venue?.city,
+                        capacity: item.venue?.capacity,
+                        surface: item.venue?.surface,
+                        image: item.venue?.image
+                    }
+                }))
+            };
+        }
+    );
 }
 
 // GET TEAM PROFILE AND SQUAD
 async function getTeamProfile(teamId) {
-    return cached(`team-profile-${teamId}`, 6 * 60 * 60 * 1000, async () => {
-        const [teamData, squadData] = await Promise.all([
-            footballAPI("teams", { id: teamId }),
-            footballAPI("players/squads", { team: teamId })
-        ]);
+    return cached(
+        `team-profile-${teamId}`,
+        6 * 60 * 60 * 1000,
+        async () => {
+            const [teamData, squadData] = await Promise.all([
+                footballAPI("teams", { id: teamId }),
+                footballAPI("players/squads", { team: teamId })
+            ]);
 
-        const item = teamData.response?.[0];
+            const item = teamData.response?.[0];
 
-        if (!item) {
-            throw new Error("Team not found.");
+            if (!item) {
+                throw new Error("Team not found.");
+            }
+
+            const squad = squadData.response?.[0]?.players || [];
+
+            return {
+                team: {
+                    id: item.team.id,
+                    name: item.team.name,
+                    code: item.team.code,
+                    country: item.team.country,
+                    founded: item.team.founded,
+                    national: item.team.national,
+                    logo: item.team.logo,
+                    venue: item.venue || {}
+                },
+                squad: squad.map(player => ({
+                    id: player.id,
+                    name: player.name,
+                    age: player.age,
+                    number: player.number,
+                    position: player.position,
+                    photo: player.photo
+                }))
+            };
         }
-
-        const squad = squadData.response?.[0]?.players || [];
-
-        return {
-            team: {
-                id: item.team.id,
-                name: item.team.name,
-                code: item.team.code,
-                country: item.team.country,
-                founded: item.team.founded,
-                national: item.team.national,
-                logo: item.team.logo,
-                venue: item.venue || {}
-            },
-            squad: squad.map(player => ({
-                id: player.id,
-                name: player.name,
-                age: player.age,
-                number: player.number,
-                position: player.position,
-                photo: player.photo
-            }))
-        };
-    });
+    );
 }
 
 // FORMAT FIXTURE DATA
@@ -426,7 +462,9 @@ app.get("/api/matches/live", async (req, res, next) => {
         const result = await cached(
             "all-live-matches",
             5 * 60 * 1000,
-            () => footballAPI("fixtures", { live: "all" })
+            () => footballAPI("fixtures", {
+                live: "all"
+            })
         );
 
         const matches = (result.response || [])
@@ -502,7 +540,9 @@ app.get("/api/matches/:id", async (req, res, next) => {
         const result = await cached(
             `match-${matchId}`,
             60 * 1000,
-            () => footballAPI("fixtures", { id: matchId })
+            () => footballAPI("fixtures", {
+                id: matchId
+            })
         );
 
         const item = result.response?.[0];
@@ -580,5 +620,6 @@ app.listen(PORT, "0.0.0.0", () => {
     console.log("Server successfully started");
     console.log("Port:", PORT);
     console.log("Football API key:", API_KEY ? "Configured" : "MISSING");
+    console.log("Free plan seasons:", FREE_PLAN_SEASONS.join(", "));
     console.log("================================");
 });
