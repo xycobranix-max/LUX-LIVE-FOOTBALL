@@ -705,3 +705,101 @@ body.dashboard-open {
     color: #b8ff35;
     font-size: 22px;
 }
+
+
+.team-profile-page {
+    min-height: 70vh;
+    padding: 35px 5%;
+}
+
+.team-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin: 35px 0;
+    padding: 28px;
+    background: linear-gradient(135deg,#17251d,#0c120f);
+    border: 1px solid rgba(184,255,53,.2);
+    border-radius: 18px;
+}
+
+.team-profile-logo {
+    width: 90px;
+    height: 90px;
+    flex: 0 0 90px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #243526;
+    color: #b8ff35;
+    font-size: 26px;
+    font-weight: 900;
+}
+
+.team-profile-header h1 {
+    color: #b8ff35;
+    margin: 0;
+}
+
+.team-profile-header p {
+    color: #9aa69e;
+    margin-top: 8px;
+}
+
+.team-profile-content {
+    max-width: 1000px;
+    margin: auto;
+}
+
+.team-profile-content h2 {
+    margin: 28px 0 14px;
+}
+
+.team-profile-content > p {
+    color: #b5c0b8;
+    line-height: 1.7;
+}
+
+.team-profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(190px,1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.team-info-card {
+    padding: 20px;
+    background: #17221c;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 13px;
+}
+
+.team-info-card > span {
+    font-size: 25px;
+}
+
+.team-info-card h3 {
+    margin: 10px 0 6px;
+}
+
+.team-info-card p {
+    color: #9aa69e;
+}
+
+@media(max-width:500px) {
+    .team-profile-header {
+        padding: 18px;
+        gap: 14px;
+    }
+
+    .team-profile-logo {
+        width: 65px;
+        height: 65px;
+        flex-basis: 65px;
+        font-size: 20px;
+    }
+
+    .team-profile-header h1 {
+        font-size: 22px;
+    }
+}
