@@ -491,6 +491,49 @@
 
     openPage(initialPage, false);
 
+// DASHBOARD SLIDE-OUT CONTROLS
+
+const dashboardToggle =
+    document.getElementById("dashboardToggle");
+
+const dashboardPanel =
+    document.getElementById("dashboardPanel");
+
+const dashboardOverlay =
+    document.getElementById("dashboardOverlay");
+
+const dashboardClose =
+    document.getElementById("dashboardClose");
+
+function openDashboard() {
+    dashboardPanel.classList.add("open");
+    dashboardOverlay.classList.add("open");
+    document.body.classList.add("dashboard-open");
+
+    dashboardToggle.setAttribute("aria-expanded", "true");
+}
+
+function closeDashboard() {
+    dashboardPanel.classList.remove("open");
+    dashboardOverlay.classList.remove("open");
+    document.body.classList.remove("dashboard-open");
+
+    dashboardToggle.setAttribute("aria-expanded", "false");
+}
+
+dashboardToggle.addEventListener("click", openDashboard);
+dashboardClose.addEventListener("click", closeDashboard);
+dashboardOverlay.addEventListener("click", closeDashboard);
+
+// Close after selecting a page
+dashboardPanel.querySelectorAll("a[data-page-link]").forEach(link => {
+    link.addEventListener("click", closeDashboard);
+});
+
+// Close with phone back/keyboard Escape
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") closeDashboard();
+});
 })();
 </script>
 
