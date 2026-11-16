@@ -57,12 +57,10 @@
         <span>LUX <strong>LIVE</strong></span>
     </div>
 
-    <nav class="navigation" aria-label="Main navigation">
-        <a href="?page=home" data-page-link="home">Home</a>
-        <a href="?page=live" data-page-link="live">Live</a>
-        <a href="?page=fixtures" data-page-link="fixtures">Fixtures</a>
-        <a href="?page=highlights" data-page-link="highlights">Highlights</a>
-    </nav>
+    <button class="dashboard-toggle" id="dashboardToggle"
+        aria-label="Open dashboard" aria-expanded="false">
+    ☰ <span>Dashboard</span>
+</button>
 
     <div class="header-actions">
         <button class="search-btn" aria-label="Search">⌕</button>
@@ -71,6 +69,73 @@
 
 </header>
 
+<!-- DASHBOARD OVERLAY -->
+<div class="dashboard-overlay" id="dashboardOverlay"></div>
+
+<!-- SLIDE-OUT DASHBOARD -->
+<aside class="dashboard-panel" id="dashboardPanel">
+
+    <div class="dashboard-header">
+        <div>
+            <span class="dashboard-logo">⚽ LUX</span>
+            <p>FOOTBALL DASHBOARD</p>
+        </div>
+
+        <button id="dashboardClose" class="dashboard-close"
+                aria-label="Close dashboard">×</button>
+    </div>
+
+    <div class="dashboard-welcome">
+        <h2>Welcome to LUX</h2>
+        <p>Your football control centre.</p>
+    </div>
+
+    <nav class="dashboard-menu">
+
+        <a href="?page=home" data-page-link="home">
+            <span>⌂</span>
+            <div>
+                <strong>Home</strong>
+                <small>Main homepage</small>
+            </div>
+            <b>›</b>
+        </a>
+
+        <a href="?page=live" data-page-link="live">
+            <span>📡</span>
+            <div>
+                <strong>Live Matches</strong>
+                <small>Live football action</small>
+            </div>
+            <b>›</b>
+        </a>
+
+        <a href="?page=fixtures" data-page-link="fixtures">
+            <span>📅</span>
+            <div>
+                <strong>Fixtures</strong>
+                <small>Upcoming matches</small>
+            </div>
+            <b>›</b>
+        </a>
+
+        <a href="?page=highlights" data-page-link="highlights">
+            <span>▶</span>
+            <div>
+                <strong>Highlights</strong>
+                <small>Football moments</small>
+            </div>
+            <b>›</b>
+        </a>
+
+    </nav>
+
+    <div class="dashboard-footer">
+        <p>YOUR GAME. YOUR PASSION.</p>
+        <strong>LUX LIVE FOOTBALL © 2026</strong>
+    </div>
+
+</aside>
 
 <main>
 
