@@ -424,39 +424,67 @@ const leagueData = {
     }
 };
 
+
 function openLeague(leagueId) {
     const league = leagueData[leagueId];
-    if (!league) return;
 
+    if (!league) {
+        console.error("League not found:", leagueId);
+        return;
+    }
+
+    // Hide all normal pages
     document.querySelectorAll("[data-page-section]").forEach(page => {
-        page.style.display = "none";
+        page.hidden = true;
     });
 
+    // Show league details
     const details = document.getElementById("leagueDetailsPage");
-    details.style.display = "block";
+    details.hidden = false;
 
+    // Update league information
     document.getElementById("leagueIcon").textContent = league.icon;
     document.getElementById("leagueTitle").textContent = league.name;
     document.getElementById("leagueCountry").textContent =
-        league.country + " · Participating teams";
+        league.country + " · Participating Teams";
 
-    document.getElementById("leagueTeams").innerHTML =
-        league.teams.map((team, index) => `
-            <div class="league-team-card">
-                <span>${index + 1}</span>
-                <strong>${team}</strong>
-                <span>›</span>
-            </div>
-        `).join("");
+    // Display teams
+    const teamsContainer = document.getElementById("leagueTeams");
+
+    teamsContainer.replaceChildren();
+
+    league.teams.forEach((team, index) => {
+        const card = document.createElement("div");
+        card.className = "league-team-card";
+
+        const number = document.createElement("span");
+        number.textContent = index + 1;
+
+        const name = document.createElement("strong");
+        name.textContent = team;
+
+        const arrow = document.createElement("span");
+        arrow.textContent = "›";
+
+        card.append(number, name, arrow);
+        teamsContainer.appendChild(card);
+    });
 
     window.scrollTo(0, 0);
 }
 
 function closeLeague() {
-    document.getElementById("leagueDetailsPage").style.display = "none";
+    // Hide league details
+    document.getElementById("leagueDetailsPage").hidden = true;
 
-    const home = document.getElementById("homePage");
-    home.style.display = "";
+    // Restore homepage
+    document.getElementById("homePage").hidden = false;
+
+    // Update URL
+    window.history.pushState({ page: "home" }, "", window.location.pathname);
+
+    document.title = "HOME | LUX LIVE FOOTBALL";
 
     window.scrollTo(0, 0);
 }
+
