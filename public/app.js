@@ -62,7 +62,7 @@ function initializeWebsite() {
     loadFixtures();
 
     console.log("LUX LIVE FOOTBALL is running!");
-});
+}
 
 // =========================================
 // FOOTER YEAR
