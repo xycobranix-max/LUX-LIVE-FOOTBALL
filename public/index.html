@@ -4,23 +4,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <meta name="theme-color" content="#07111f">
     <meta name="description" content="LUX LIVE FOOTBALL - Your home for live football, fixtures, results and highlights.">
 
-    <title>LUX LIVE FOOTBALL | Watch Football</title>
+    <title>LUX LIVE FOOTBALL</title>
 
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/styles.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        [hidden] {
+            display: none !important;
+        }
+
+        .navigation a.active {
+            color: #b8ff35;
+            border-bottom: 2px solid #b8ff35;
+            padding-bottom: 7px;
+        }
+
+        .page-heading {
+            padding: 45px 5% 15px;
+        }
+
+        .page-heading p {
+            margin-top: 10px;
+        }
+
+        .back-home {
+            display: inline-block;
+            margin-top: 20px;
+            color: #b8ff35;
+        }
+
+        .page-empty {
+            padding: 35px;
+            text-align: center;
+        }
+    </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
+<!-- HEADER / DASHBOARD NAVIGATION -->
 <header class="header">
 
     <div class="logo">
@@ -28,11 +57,11 @@
         <span>LUX <strong>LIVE</strong></span>
     </div>
 
-    <nav class="navigation">
-        <a href="#home" class="active">Home</a>
-        <a href="#live">Live</a>
-        <a href="#matches">Fixtures</a>
-        <a href="#highlights">Highlights</a>
+    <nav class="navigation" aria-label="Main navigation">
+        <a href="?page=home" data-page-link="home">Home</a>
+        <a href="?page=live" data-page-link="live">Live</a>
+        <a href="?page=fixtures" data-page-link="fixtures">Fixtures</a>
+        <a href="?page=highlights" data-page-link="highlights">Highlights</a>
     </nav>
 
     <div class="header-actions">
@@ -43,228 +72,267 @@
 </header>
 
 
-<!-- MAIN CONTENT -->
-<main id="home">
+<main>
 
-    <!-- HERO -->
-    <section class="hero">
+    <!-- HOME PAGE -->
+    <div id="homePage" data-page-section="home">
 
-        <div class="hero-content">
+        <section class="hero">
 
-            <span class="hero-label">THE HOME OF FOOTBALL</span>
+            <div class="hero-content">
 
-            <h1>
-                FEEL THE<br>
-                <span>GAME.</span>
-            </h1>
+                <span class="hero-label">THE HOME OF FOOTBALL</span>
+
+                <h1>
+                    FEEL THE<br>
+                    <span>GAME.</span>
+                </h1>
+
+                <p>
+                    Experience football like never before.
+                    Follow live matches, fixtures, results and highlights
+                    all in one place.
+                </p>
+
+                <div class="hero-buttons">
+                    <a href="?page=live" class="primary-btn">
+                        ▶ Explore Live Matches
+                    </a>
+
+                    <a href="?page=fixtures" class="secondary-btn">
+                        View Fixtures
+                    </a>
+                </div>
+
+            </div>
+
+            <div class="hero-visual">
+                <div class="football-circle">⚽</div>
+                <div class="hero-tag">LUX FOOTBALL</div>
+            </div>
+
+        </section>
+
+
+        <section class="section" id="homeLeagues">
+
+            <div class="section-heading">
+                <div>
+                    <span class="section-subtitle">FOLLOW YOUR FAVOURITES</span>
+                    <h2>Popular Leagues</h2>
+                </div>
+            </div>
+
+            <div class="leagues-grid">
+
+                <div class="league-card">
+                    <span>🏆</span>
+                    <h3>Premier League</h3>
+                    <p>England</p>
+                </div>
+
+                <div class="league-card">
+                    <span>🏆</span>
+                    <h3>La Liga</h3>
+                    <p>Spain</p>
+                </div>
+
+                <div class="league-card">
+                    <span>🏆</span>
+                    <h3>Serie A</h3>
+                    <p>Italy</p>
+                </div>
+
+                <div class="league-card">
+                    <span>🏆</span>
+                    <h3>Bundesliga</h3>
+                    <p>Germany</p>
+                </div>
+
+                <div class="league-card">
+                    <span>🏆</span>
+                    <h3>Champions League</h3>
+                    <p>Europe</p>
+                </div>
+
+                <div class="league-card">
+                    <span>🌍</span>
+                    <h3>AFCON</h3>
+                    <p>Africa</p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="about-section">
+            <h2>MORE THAN JUST FOOTBALL.</h2>
 
             <p>
-                Experience football like never before.
-                Follow live matches, fixtures, results and highlights
-                all in one place.
+                LUX LIVE FOOTBALL brings football fans closer to the game
+                through match information, fixtures, results and authorised
+                live streaming.
+            </p>
+        </section>
+
+    </div>
+
+
+    <!-- LIVE PAGE -->
+    <div id="livePage" data-page-section="live" hidden>
+
+        <div class="page-heading">
+            <span class="section-subtitle">DON'T MISS THE ACTION</span>
+            <h1>LIVE MATCHES</h1>
+            <p>Follow football matches happening around the world.</p>
+        </div>
+
+        <section class="section">
+
+            <div class="section-heading">
+                <h2>Now Playing</h2>
+
+                <span class="live-indicator">
+                    <span class="live-dot"></span>
+                    LIVE
+                </span>
+            </div>
+
+            <div id="liveMatches" class="matches-grid">
+
+                <div class="empty-state">
+                    <span>⚽</span>
+                    <h3>No live matches available</h3>
+                    <p>
+                        Live match listings will appear here when connected
+                        to a match-data provider.
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="section" id="player">
+
+            <div class="section-heading">
+                <div>
+                    <span class="section-subtitle">LUX MEDIA</span>
+                    <h2>Football Streaming</h2>
+                </div>
+            </div>
+
+            <div class="video-container">
+
+                <div class="video-placeholder">
+                    <div class="play-icon">▶</div>
+                    <h3>LUX LIVE FOOTBALL</h3>
+                    <p>Select an authorised live stream to watch.</p>
+                </div>
+
+            </div>
+
+            <p class="player-note">
+                Video streaming will become available after integration
+                with a licensed streaming provider.
             </p>
 
-            <div class="hero-buttons">
+        </section>
 
-                <a href="#live" class="primary-btn">
-                    ▶ Explore Live Matches
-                </a>
+        <section class="section">
+            <a href="?page=home" class="back-home">← Back to Home</a>
+        </section>
 
-                <a href="#matches" class="secondary-btn">
-                    View Fixtures
-                </a>
+    </div>
 
-            </div>
 
+    <!-- FIXTURES PAGE -->
+    <div id="fixturesPage" data-page-section="fixtures" hidden>
+
+        <div class="page-heading">
+            <span class="section-subtitle">UPCOMING ACTION</span>
+            <h1>FIXTURES</h1>
+            <p>See upcoming football matches and schedules.</p>
         </div>
 
-        <div class="hero-visual">
-            <div class="football-circle">⚽</div>
-            <div class="hero-tag">LUX FOOTBALL</div>
+        <section class="section">
+
+            <div class="section-heading">
+                <h2>Upcoming Matches</h2>
+            </div>
+
+            <div id="fixtures" class="fixtures-container">
+
+                <div class="empty-state">
+                    <span>📅</span>
+                    <h3>Fixtures coming soon</h3>
+                    <p>
+                        Upcoming matches will appear here once match data
+                        is connected.
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="section">
+            <a href="?page=home" class="back-home">← Back to Home</a>
+        </section>
+
+    </div>
+
+
+    <!-- HIGHLIGHTS PAGE -->
+    <div id="highlightsPage" data-page-section="highlights" hidden>
+
+        <div class="page-heading">
+            <span class="section-subtitle">RELIVE THE MOMENTS</span>
+            <h1>FOOTBALL HIGHLIGHTS</h1>
+            <p>Discover memorable goals, skills and football moments.</p>
         </div>
 
-    </section>
+        <section class="section">
 
-
-    <!-- LIVE MATCHES -->
-    <section class="section" id="live">
-
-        <div class="section-heading">
-            <div>
-                <span class="section-subtitle">DON'T MISS THE ACTION</span>
-                <h2>Live Matches</h2>
+            <div class="section-heading">
+                <h2>Latest Highlights</h2>
             </div>
 
-            <span class="live-indicator">
-                <span class="live-dot"></span>
-                LIVE
-            </span>
-        </div>
+            <div class="highlights-grid">
 
-        <div id="liveMatches" class="matches-grid">
+                <div class="highlight-card">
+                    <div class="highlight-image">▶</div>
+                    <h3>Match Highlights</h3>
+                    <p>Watch memorable football moments.</p>
+                </div>
 
-            <div class="empty-state">
-                <span>⚽</span>
-                <h3>No live matches available</h3>
-                <p>Live match listings will appear here when connected to a match-data provider.</p>
+                <div class="highlight-card">
+                    <div class="highlight-image">▶</div>
+                    <h3>Best Goals</h3>
+                    <p>Relive incredible goals and skills.</p>
+                </div>
+
+                <div class="highlight-card">
+                    <div class="highlight-image">▶</div>
+                    <h3>Football Moments</h3>
+                    <p>Discover unforgettable match moments.</p>
+                </div>
+
             </div>
 
-        </div>
+            <p class="player-note">
+                Highlight videos can be added using authorised video sources.
+            </p>
 
-    </section>
+        </section>
 
+        <section class="section">
+            <a href="?page=home" class="back-home">← Back to Home</a>
+        </section>
 
-    <!-- LEAGUES -->
-    <section class="section" id="leagues">
-
-        <div class="section-heading">
-            <div>
-                <span class="section-subtitle">FOLLOW YOUR FAVOURITES</span>
-                <h2>Popular Leagues</h2>
-            </div>
-        </div>
-
-        <div class="leagues-grid">
-
-            <div class="league-card">
-                <span>🏆</span>
-                <h3>Premier League</h3>
-                <p>England</p>
-            </div>
-
-            <div class="league-card">
-                <span>🏆</span>
-                <h3>La Liga</h3>
-                <p>Spain</p>
-            </div>
-
-            <div class="league-card">
-                <span>🏆</span>
-                <h3>Serie A</h3>
-                <p>Italy</p>
-            </div>
-
-            <div class="league-card">
-                <span>🏆</span>
-                <h3>Bundesliga</h3>
-                <p>Germany</p>
-            </div>
-
-            <div class="league-card">
-                <span>🏆</span>
-                <h3>Champions League</h3>
-                <p>Europe</p>
-            </div>
-
-            <div class="league-card">
-                <span>🌍</span>
-                <h3>AFCON</h3>
-                <p>Africa</p>
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- FIXTURES -->
-    <section class="section" id="matches">
-
-        <div class="section-heading">
-            <div>
-                <span class="section-subtitle">UPCOMING ACTION</span>
-                <h2>Upcoming Fixtures</h2>
-            </div>
-        </div>
-
-        <div id="fixtures" class="fixtures-container">
-
-            <div class="empty-state">
-                <span>📅</span>
-                <h3>Fixtures coming soon</h3>
-                <p>Upcoming matches will appear here once match data is connected.</p>
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- HIGHLIGHTS -->
-    <section class="section" id="highlights">
-
-        <div class="section-heading">
-            <div>
-                <span class="section-subtitle">RELIVE THE MOMENTS</span>
-                <h2>Football Highlights</h2>
-            </div>
-        </div>
-
-        <div class="highlights-grid">
-
-            <div class="highlight-card">
-                <div class="highlight-image">▶</div>
-                <h3>Match Highlights</h3>
-                <p>Watch memorable football moments.</p>
-            </div>
-
-            <div class="highlight-card">
-                <div class="highlight-image">▶</div>
-                <h3>Best Goals</h3>
-                <p>Relive incredible goals and skills.</p>
-            </div>
-
-            <div class="highlight-card">
-                <div class="highlight-image">▶</div>
-                <h3>Football Moments</h3>
-                <p>Discover unforgettable match moments.</p>
-            </div>
-
-        </div>
-
-    </section>
-
-
-    <!-- STREAM PLAYER -->
-    <section class="section" id="player">
-
-        <div class="section-heading">
-            <div>
-                <span class="section-subtitle">LUX MEDIA</span>
-                <h2>Football Player</h2>
-            </div>
-        </div>
-
-        <div class="video-container">
-
-            <div class="video-placeholder">
-                <div class="play-icon">▶</div>
-                <h3>LUX LIVE FOOTBALL</h3>
-                <p>Select an authorised live stream to watch.</p>
-            </div>
-
-        </div>
-
-        <p class="player-note">
-            Video streaming will become available after integration
-            with a licensed streaming provider.
-        </p>
-
-    </section>
-
-
-    <!-- ABOUT -->
-    <section class="about-section">
-
-        <h2>MORE THAN JUST FOOTBALL.</h2>
-
-        <p>
-            LUX LIVE FOOTBALL brings football fans closer to the game
-            through match information, fixtures, results and authorised
-            live streaming.
-        </p>
-
-    </section>
+    </div>
 
 </main>
 
@@ -279,10 +347,10 @@
     <p>Your game. Your passion. Your platform.</p>
 
     <div class="footer-links">
-        <a href="#home">Home</a>
-        <a href="#live">Live Matches</a>
-        <a href="#matches">Fixtures</a>
-        <a href="#highlights">Highlights</a>
+        <a href="?page=home">Home</a>
+        <a href="?page=live">Live Matches</a>
+        <a href="?page=fixtures">Fixtures</a>
+        <a href="?page=highlights">Highlights</a>
     </div>
 
     <p class="copyright">
@@ -318,7 +386,113 @@
 </div>
 
 
-<script src="app.js"></script>
+<!-- EXISTING APP FUNCTIONS -->
+<script src="/app.js"></script>
+
+
+<!-- PAGE NAVIGATION SYSTEM -->
+<script>
+(function () {
+
+    const pages = ["home", "live", "fixtures", "highlights"];
+
+    function openPage(page, updateHistory = true) {
+
+        if (!pages.includes(page)) {
+            page = "home";
+        }
+
+        // Hide all pages
+        document.querySelectorAll("[data-page-section]").forEach(section => {
+            section.hidden = true;
+        });
+
+        // Show selected page
+        const selectedPage = document.querySelector(
+            '[data-page-section="' + page + '"]'
+        );
+
+        if (selectedPage) {
+            selectedPage.hidden = false;
+        }
+
+        // Update active dashboard button
+        document.querySelectorAll("[data-page-link]").forEach(link => {
+            const active = link.dataset.pageLink === page;
+
+            link.classList.toggle("active", active);
+
+            if (active) {
+                link.setAttribute("aria-current", "page");
+            } else {
+                link.removeAttribute("aria-current");
+            }
+        });
+
+        // Update browser URL
+        if (updateHistory) {
+            const url = page === "home"
+                ? window.location.pathname
+                : "?page=" + page;
+
+            window.history.pushState({ page: page }, "", url);
+        }
+
+        // Start every page at the top
+        window.scrollTo({
+            top: 0,
+            behavior: "instant"
+        });
+
+        document.title =
+            page.toUpperCase() + " | LUX LIVE FOOTBALL";
+    }
+
+
+    // Handle navigation clicks
+    document.addEventListener("click", function (event) {
+
+        const link = event.target.closest('a[href*="?page="]');
+
+        if (!link) return;
+
+        const url = new URL(link.href);
+
+        if (url.origin !== window.location.origin) return;
+
+        event.preventDefault();
+
+        const page = url.searchParams.get("page") || "home";
+
+        openPage(page);
+    });
+
+
+    // Handle Android/browser Back and Forward buttons
+    window.addEventListener("popstate", function () {
+        const page =
+            new URLSearchParams(window.location.search).get("page") || "home";
+
+        openPage(page, false);
+    });
+
+
+    // Set the copyright year
+    const year = document.getElementById("year");
+
+    if (year) {
+        year.textContent = new Date().getFullYear();
+    }
+
+
+    // Open the correct page on initial loading
+    const initialPage =
+        new URLSearchParams(window.location.search).get("page") || "home";
+
+    openPage(initialPage, false);
+
+})();
+</script>
 
 </body>
 </html>
