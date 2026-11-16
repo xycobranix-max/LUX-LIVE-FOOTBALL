@@ -646,6 +646,23 @@ app.get("/api/goal/leagues/:leagueId/teams", async (req, res) => {
     }
 });
 
+// GOAL API - LIST AVAILABLE LEAGUES
+app.get("/api/goal/leagues", async (req, res) => {
+    try {
+        const data = await goalAPI("/leagues");
+
+        res.json(data);
+
+    } catch (error) {
+        console.error("Goal leagues error:", error.message);
+
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve Goal API leagues",
+            error: error.message
+        });
+    }
+});
 
 /* =========================================
    GOAL API - LEAGUE FIXTURES
