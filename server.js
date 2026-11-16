@@ -621,30 +621,6 @@ app.get("/api/platform", (req, res) => {
     });
 });
 
-// API NOT FOUND
-app.use("/api", (req, res) => {
-    res.status(404).json({
-        success: false,
-        message: "API endpoint not found."
-    });
-});
-
-// GENERAL NOT FOUND
-app.use((req, res) => {
-    res.status(404).send("Page not found - LUX LIVE FOOTBALL");
-});
-
-// ERROR HANDLER
-app.use((error, req, res, next) => {
-    console.error("LUX API ERROR:", error.message);
-
-    res.status(error.status || 500).json({
-        success: false,
-        message: error.message || "Internal server error."
-    });
-});
-
-
 // =========================================
 // GOAL API LEAGUE TEAMS
 // =========================================
@@ -669,6 +645,30 @@ app.get("/api/goal/leagues/:leagueId/teams", async (req, res) => {
         });
     }
 });
+
+// API NOT FOUND
+app.use("/api", (req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "API endpoint not found."
+    });
+});
+
+// GENERAL NOT FOUND
+app.use((req, res) => {
+    res.status(404).send("Page not found - LUX LIVE FOOTBALL");
+});
+
+// ERROR HANDLER
+app.use((error, req, res, next) => {
+    console.error("LUX API ERROR:", error.message);
+
+    res.status(error.status || 500).json({
+        success: false,
+        message: error.message || "Internal server error."
+    });
+});
+
 
 // START SERVER
 app.listen(PORT, "0.0.0.0", () => {
