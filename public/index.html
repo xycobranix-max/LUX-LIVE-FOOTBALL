@@ -743,6 +743,7 @@ if (page === "highlights") {
 
 window.luxLiveStreams = [];
 
+
 window.loadLiveStreams = async function () {
     const list = document.getElementById("liveStreamList");
 
@@ -766,25 +767,47 @@ window.loadLiveStreams = async function () {
         window.luxLiveStreams = result.streams;
 
         if (result.streams.length === 0) {
-            list.innerHTML = "<p>No published live streams available right now.</p>";
+            list.innerHTML = "<p>No live streams available right now.</p>";
             return;
         }
 
-        list.innerHTML = result.streams.map((stream, index) => `
-            <div class="live-stream-card">
-                <div class="live-stream-info">
-                    <span class="live-status">● ${stream.status === "live" ? "LIVE NOW" : "SCHEDULED"}</span>
-                    <h3>${escapeLiveText(stream.title)}</h3>
-                    <p>${escapeLiveText(stream.competition || "Football")}</p>
-                    <p>${escapeLiveText(stream.home_team || "")} vs ${escapeLiveText(stream.away_team || "")}</p>
-                    <button type="button" onclick="playLiveStream(${index})">
-                        ▶ WATCH LIVE
-                    </button>
-                </div>
-            </div>
-        `).join("");
+        list.innerHTML = result.streams.map((stream, index) => {
+            const teams = [
+                stream.home_team,
+                stream.away_team
+            ].filter(Boolean).join(" vs ");
 
-        const liveIndex = result.streams.findIndex(stream => stream.status === "live");
+            const title = (
+                !stream.title ||
+                stream.title.toLowerCase() === "live football"
+            ) ? (teams || "Football Match") : stream.title;
+
+            return `
+                <div class="live-stream-card"
+                     role="button"
+                     tabindex="0"
+                     onclick="playLiveStream(${index})"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();playLiveStream(${index});}"
+                     style="cursor:pointer;">
+
+                    <div class="live-stream-info">
+                        <span class="live-status">
+                            ● ${stream.status === "live" ? "LIVE NOW" : "SCHEDULED"}
+                        </span>
+
+                        <h3>${escapeLiveText(title)}</h3>
+
+                        <p>${escapeLiveText(stream.competition || "Football")}</p>
+
+                        <p>${escapeLiveText(teams)}</p>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        const liveIndex = result.streams.findIndex(
+            stream => stream.status === "live"
+        );
 
         if (liveIndex !== -1) {
             window.playLiveStream(liveIndex);
@@ -794,62 +817,6 @@ window.loadLiveStreams = async function () {
         console.error("LUX LIVE TV:", error);
         list.innerHTML = "<p>Unable to load streams. Please refresh and try again.</p>";
     }
-};
-
-window.escapeLiveText = function (value) {
-    return String(value).replace(/[&<>"']/g, character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    })[character]);
-};
-
-
-window.playLiveStream = function (index) {
-    const stream = window.luxLiveStreams[index];
-
-    if (!stream) return;
-
-    const player = document.getElementById("liveStreamPlayer");
-
-    if (!player) return;
-
-    const playbackUrl = stream.playback_url;
-
-    if (
-        !playbackUrl ||
-        !playbackUrl.startsWith("https://www.youtube-nocookie.com/embed/")
-    ) {
-        player.innerHTML = "<p>Unsupported stream URL.</p>";
-        return;
-    }
-
-    player.innerHTML = `
-        <div class="live-active-player">
-            <div class="live-active-heading">
-                <span>🔴 LIVE NOW</span>
-                <h3>${escapeLiveText(stream.title)}</h3>
-            </div>
-
-            <iframe
-                src="${playbackUrl}?autoplay=0&playsinline=1&rel=0"
-                title="${escapeLiveText(stream.title)}"
-                width="100%"
-                height="100%"
-                style="display:block;width:100%;aspect-ratio:16/9;border:0;"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allowfullscreen>
-            </iframe>
-        </div>
-    `;
-
-    player.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
 };
 
 
