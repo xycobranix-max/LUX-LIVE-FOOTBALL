@@ -17,26 +17,25 @@ const leagueData = {
         country: "England",
         icon: "🏆"
     },
+
+"champions-league": {
+        name: "Champions League",
+        country: "Europe",
+        icon: "🏆"
+    },
+
     "la-liga": {
         name: "La Liga",
         country: "Spain",
         icon: "🏆"
     },
-    "serie-a": {
-        name: "Serie A",
-        country: "Italy",
-        icon: "🏆"
-    },
+    
     "bundesliga": {
         name: "Bundesliga",
         country: "Germany",
         icon: "🏆"
     },
-    "champions-league": {
-        name: "Champions League",
-        country: "Europe",
-        icon: "🏆"
-    },
+    
     "afcon": {
         name: "Africa Cup of Nations",
         country: "Africa",
@@ -133,12 +132,24 @@ function initializeSearch() {
     });
 }
 
+
 // =========================================
-// API HELPER
+// API HELPER — AUTHENTICATED LUX REQUESTS
 // =========================================
 
 async function apiRequest(url) {
-    const response = await fetch(url);
+    const token = sessionStorage.getItem("lux_user_token");
+
+    const headers = {};
+
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, {
+        method: "GET",
+        headers
+    });
 
     const result = await response.json();
 
@@ -359,21 +370,17 @@ const fixtureLeagues = [
         name: "Premier League"
     },
     {
+        id: "cmr77dw3900f5rx06j05wgzv4",
+        name: "Champions League"
+    },
+    {
         id: "cmr77dvnt006nrx063v3w622e",
         name: "La Liga"
     },
     {
-        id: "cmr77dvpd006yrx06zig7907g",
-        name: "Serie A"
-    },
-    {
         id: "cmr77dvgm0002rx06rt2uqxii",
         name: "Bundesliga"
-    },
-    {
-        id: "cmr77dw3900f5rx06j05wgzv4",
-        name: "Champions League"
-    },
+    },    
     {
         id: "cmr77dvhf0015rx069i57rsbo",
         name: "AFCON"
@@ -815,7 +822,6 @@ async function openLeague(leagueId) {
     const goalLeagueIds = {
         "premier-league": "cmr77dvkr005nrx06lp7rvp49",
         "la-liga": "cmr77dvnt006nrx063v3w622e",
-        "serie-a": "cmr77dvpd006yrx06zig7907g",
         "bundesliga": "cmr77dvgm0002rx06rt2uqxii",
         "champions-league": "cmr77dw3900f5rx06j05wgzv4",
         "afcon": "cmr77dvhf0015rx069i57rsbo"
