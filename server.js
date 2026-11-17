@@ -693,6 +693,8 @@ app.get("/api/goal/fixtures/live", async (req, res) => {
     try {
         const data = await goalAPI("/fixtures/live");
 
+console.log("RAW GOAL LIVE DATA:", JSON.stringify(data, null, 2));
+
         res.json(data);
 
     } catch (error) {
