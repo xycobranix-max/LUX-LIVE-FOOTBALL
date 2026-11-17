@@ -421,6 +421,37 @@
     </div>
 
 
+<!-- MATCH DETAILS PAGE -->
+<div id="matchPage" data-page-section="match" hidden>
+
+    <div class="page-heading">
+        <span class="section-subtitle">LUX MATCH CENTRE</span>
+        <h1>MATCH DETAILS</h1>
+        <p>Everything happening in the match.</p>
+
+        <button class="back-button"
+                onclick="window.location.href='?page=fixtures'">
+            ← Back to Fixtures
+        </button>
+    </div>
+
+    <section class="section">
+
+        <div id="matchDetailsContent">
+
+            <div class="empty-state">
+                <span>⚽</span>
+                <h3>Loading match details...</h3>
+                <p>Please wait while we retrieve match information.</p>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
     <!-- HIGHLIGHTS PAGE -->
     <div id="highlightsPage" data-page-section="highlights" hidden>
 
@@ -531,7 +562,7 @@
 (function () {
     "use strict";
 
-    const pages = ["home", "live", "fixtures", "highlights"];
+    const pages = ["home", "live", "fixtures", "highlights", "match"];
 
     const dashboardToggle = document.getElementById("dashboardToggle");
     const dashboardPanel = document.getElementById("dashboardPanel");
@@ -567,6 +598,16 @@
         if (selectedPage) {
             selectedPage.hidden = false;
         }
+
+// Load selected match details
+if (page === "match") {
+    const fixtureId =
+        new URLSearchParams(window.location.search).get("id");
+
+    if (fixtureId && typeof window.loadMatchDetails === "function") {
+        window.loadMatchDetails(fixtureId);
+    }
+}
 
         // Update active dashboard navigation link
         document.querySelectorAll("[data-page-link]").forEach(link => {
