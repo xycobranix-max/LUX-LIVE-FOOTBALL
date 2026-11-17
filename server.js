@@ -756,6 +756,80 @@ app.get("/api/goal/teams/:teamId/upcoming", async (req, res) => {
     }
 });
 
+// =========================================
+// GOAL API — FOOTBALL HIGHLIGHTS
+// =========================================
+
+app.get("/api/goal/videos", async (req, res) => {
+    try {
+        const data = await goalAPI("/videos");
+        res.json(data);
+    } catch (error) {
+        console.error("Goal videos error:", error.message);
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve football highlights"
+        });
+    }
+});
+
+app.get("/api/goal/videos/recent", async (req, res) => {
+    try {
+        const data = await goalAPI("/videos/recent");
+        res.json(data);
+    } catch (error) {
+        console.error("Recent videos error:", error.message);
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve recent highlights"
+        });
+    }
+});
+
+app.get("/api/goal/videos/match/:matchId", async (req, res) => {
+    try {
+        const data = await goalAPI(
+            `/videos/match/${encodeURIComponent(req.params.matchId)}`
+        );
+        res.json(data);
+    } catch (error) {
+        console.error("Match videos error:", error.message);
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve match highlights"
+        });
+    }
+});
+
+app.get("/api/goal/videos/league/:leagueId", async (req, res) => {
+    try {
+        const data = await goalAPI(
+            `/videos/league/${encodeURIComponent(req.params.leagueId)}`
+        );
+        res.json(data);
+    } catch (error) {
+        console.error("League videos error:", error.message);
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve league highlights"
+        });
+    }
+});
+
+app.get("/api/goal/videos/date/:date", async (req, res) => {
+    try {
+        const data = await goalAPI(
+            `/videos/date/${encodeURIComponent(req.params.date)}`
+        );
+        res.json(data);
+    } catch (error) {
+        console.error("Date videos error:", error.message);
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve highlights for this date"
+        });
+    }
+});
 
 /* =========================================
    LUX LIVE FOOTBALL
