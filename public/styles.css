@@ -1952,3 +1952,25 @@ body.dashboard-open {
         padding: 17px;
     }
 }
+
+/* =========================================
+   LUX MEMBERS-ONLY ACCESS
+========================================= */
+
+body.lux-auth-locked > :not(#loginModal) {
+    display: none !important;
+}
+
+body.lux-auth-locked #loginModal {
+    display: flex !important;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #07111f;
+}
+
+body.lux-auth-locked #loginModal .modal-content {
+    width: 100%;
+    max-width: 430px;
+    margin: auto;
+}
