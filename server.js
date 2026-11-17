@@ -1011,7 +1011,7 @@ function getYouTubeVideoId(value) {
 }
 
 
-// ADMIN LOGIN
+ // ADMIN LOGIN
 app.post("/api/admin/login", async (req, res) => {
     try {
         const ip = req.ip;
@@ -1042,6 +1042,8 @@ app.post("/api/admin/login", async (req, res) => {
         }
 
         if (email !== ADMIN_EMAIL) {
+            console.warn("Admin login rejected: email does not match ADMIN_EMAIL.");
+
             attempts.count++;
             adminLoginAttempts.set(ip, attempts);
 
@@ -1060,7 +1062,22 @@ app.post("/api/admin/login", async (req, res) => {
                 password
             });
 
-        if (error || !data.user || !data.session) {
+        if (error) {
+            console.error("Supabase sign-in failed:", {
+                message: error.message,
+                status: error.status,
+                code: error.code
+            });
+
+            return res.status(401).json({
+                success: false,
+                message: "Invalid administrator credentials."
+            });
+        }
+
+        if (!data.user || !data.session) {
+            console.error("Supabase sign-in returned no user or session.");
+
             return res.status(401).json({
                 success: false,
                 message: "Invalid administrator credentials."
@@ -1068,9 +1085,11 @@ app.post("/api/admin/login", async (req, res) => {
         }
 
         if (
-    !data.user.email ||
-    data.user.email.toLowerCase() !== ADMIN_EMAIL
-) {
+            !data.user.email ||
+            data.user.email.trim().toLowerCase() !== ADMIN_EMAIL
+        ) {
+            console.error("Admin login rejected: authenticated email mismatch.");
+
             return res.status(403).json({
                 success: false,
                 message: "Administrator access denied."
@@ -1079,7 +1098,7 @@ app.post("/api/admin/login", async (req, res) => {
 
         adminLoginAttempts.delete(ip);
 
-        res.json({
+        return res.json({
             success: true,
             access_token: data.session.access_token,
             expires_at: data.session.expires_at,
@@ -1091,7 +1110,7 @@ app.post("/api/admin/login", async (req, res) => {
     } catch (error) {
         console.error("Admin login error:", error.message);
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Unable to sign in."
         });
