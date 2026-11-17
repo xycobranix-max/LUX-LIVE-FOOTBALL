@@ -347,22 +347,86 @@ function displayLiveMatches(matches) {
 }
 
 
+
 // =========================================
-// UPCOMING FIXTURES
+// UPCOMING FIXTURES - GOAL API
 // =========================================
+
+// Your existing Goal API league database IDs
+const fixtureLeagues = [
+    {
+        id: "cmr77dvkr005nrx06lp7rvp49",
+        name: "Premier League"
+    },
+    {
+        id: "cmr77dvnt006nrx063v3w622e",
+        name: "La Liga"
+    },
+    {
+        id: "cmr77dvpd006yrx06zig7907g",
+        name: "Serie A"
+    },
+    {
+        id: "cmr77dvgm0002rx06rt2uqxii",
+        name: "Bundesliga"
+    },
+    {
+        id: "cmr77dw3900f5rx06j05wgzv4",
+        name: "Champions League"
+    },
+    {
+        id: "cmr77dvhf0015rx069i57rsbo",
+        name: "AFCON"
+    }
+];
 
 async function loadFixtures() {
     const container = document.getElementById("fixtures");
 
     if (!container) return;
 
-    try {
-        const result = await apiRequest("/api/matches/fixtures");
+    container.innerHTML = `
+        <div class="empty-state">
+            <span>📅</span>
+            <h3>Loading fixtures...</h3>
+            <p>Fetching upcoming matches.</p>
+        </div>
+    `;
 
-        displayFixtures(result.fixtures || []);
+    try {
+        const responses = await Promise.allSettled(
+            fixtureLeagues.map(async league => {
+                const result = await apiRequest(
+                    `/api/goal/leagues/${encodeURIComponent(league.id)}/fixtures`
+                );
+
+                const matches = Array.isArray(result.data)
+                    ? result.data
+                    : [];
+
+                return matches.map(match => ({
+                    ...match,
+                    leagueName: match.leagueName || league.name
+                }));
+            })
+        );
+
+        const fixtures = responses
+            .filter(response => response.status === "fulfilled")
+            .flatMap(response => response.value);
+
+        const failedCount = responses.filter(
+            response => response.status === "rejected"
+        ).length;
+
+        displayFixtures(fixtures);
+
+        if (failedCount === fixtureLeagues.length) {
+            throw new Error("Unable to retrieve fixtures from Goal API.");
+        }
 
     } catch (error) {
-        console.error("Fixtures:", error.message);
+        console.error("Goal API Fixtures:", error.message);
 
         container.innerHTML = `
             <div class="empty-state">
@@ -379,7 +443,7 @@ function displayFixtures(fixtures) {
 
     if (!container) return;
 
-    if (!fixtures.length) {
+    if (!Array.isArray(fixtures) || fixtures.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
                 <span>📅</span>
@@ -390,36 +454,136 @@ function displayFixtures(fixtures) {
         return;
     }
 
-    container.innerHTML = fixtures.map(match => {
-        const date = match.date
-            ? new Date(match.date).toLocaleString("en-KE", {
+    // Sort fixtures by kickoff date
+    const sortedFixtures = [...fixtures].sort((a, b) => {
+        const dateA = new Date(a.kickoffUtc || a.matchDate || 0);
+        const dateB = new Date(b.kickoffUtc || b.matchDate || 0);
+
+        return dateA - dateB;
+    });
+
+    // Display scheduled and upcoming matches first
+    const upcomingFixtures = sortedFixtures.filter(match => {
+        const status = String(match.matchStatus || "").toUpperCase();
+
+        return ![
+            "FINISHED",
+            "FT",
+            "CANCELLED",
+            "POSTPONED",
+            "ABANDONED"
+        ].includes(status);
+    });
+
+    if (upcomingFixtures.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <span>📅</span>
+                <h3>No upcoming fixtures</h3>
+                <p>Check again later for new matches.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const safeBadge = url =>
+        typeof url === "string" && /^https:\/\//i.test(url)
+            ? escapeAttribute(url)
+            : "";
+
+    container.innerHTML = upcomingFixtures.map(match => {
+
+        const homeTeam = match.homeTeamName ||
+            match.homeTeam?.name || "Home";
+
+        const awayTeam = match.awayTeamName ||
+            match.awayTeam?.name || "Away";
+
+        const homeBadge = safeBadge(
+            match.teamHomeBadge || match.homeTeam?.badge || ""
+        );
+
+        const awayBadge = safeBadge(
+            match.teamAwayBadge || match.awayTeam?.badge || ""
+        );
+
+        const rawDate = match.kickoffUtc || match.matchDate;
+
+        const date = rawDate
+            ? new Date(rawDate).toLocaleString("en-KE", {
                 dateStyle: "medium",
-                timeStyle: "short"
+                timeStyle: "short",
+                timeZone: "Africa/Nairobi"
             })
             : "Date TBA";
+
+        const status = match.matchStatus || "SCHEDULED";
+
+        const homeScore = match.homeTeamScore ?? "";
+        const awayScore = match.awayTeamScore ?? "";
+
+        const hasScore = homeScore !== "" && awayScore !== "";
 
         return `
             <div class="fixture-card">
 
-                <div>
-                    <strong class="fixture-teams">
-                        ${escapeHTML(match.homeTeam || "Home")}
-                        vs
-                        ${escapeHTML(match.awayTeam || "Away")}
-                    </strong>
+                <div class="fixture-header">
+                    <span>
+                        ${escapeHTML(match.leagueName || "Football")}
+                    </span>
 
-                    <p>${escapeHTML(match.competition || "Football")}</p>
+                    <strong>
+                        ${escapeHTML(status)}
+                    </strong>
                 </div>
 
-                <div>
-                    <p>${escapeHTML(date)}</p>
-                    <strong>${escapeHTML(match.status || "Scheduled")}</strong>
+                <div class="fixture-teams">
+
+                    <div class="team">
+                        ${
+                            homeBadge
+                                ? `<img class="team-logo"
+                                        src="${homeBadge}"
+                                        alt="${escapeHTML(homeTeam)}"
+                                        loading="lazy">`
+                                : `<span class="team-logo">⚽</span>`
+                        }
+
+                        <strong>${escapeHTML(homeTeam)}</strong>
+                    </div>
+
+                    <div class="fixture-score">
+                        ${
+                            hasScore
+                                ? `${escapeHTML(homeScore)} - ${escapeHTML(awayScore)}`
+                                : "VS"
+                        }
+                    </div>
+
+                    <div class="team">
+                        ${
+                            awayBadge
+                                ? `<img class="team-logo"
+                                        src="${awayBadge}"
+                                        alt="${escapeHTML(awayTeam)}"
+                                        loading="lazy">`
+                                : `<span class="team-logo">⚽</span>`
+                        }
+
+                        <strong>${escapeHTML(awayTeam)}</strong>
+                    </div>
+
+                </div>
+
+                <div class="fixture-date">
+                    📅 ${escapeHTML(date)}
                 </div>
 
             </div>
         `;
     }).join("");
 }
+
 
 // =========================================
 // MATCH VIEWER
