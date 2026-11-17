@@ -939,3 +939,428 @@ body.dashboard-open {
     font-size: 12px;
 }
 
+
+/* =========================================
+   LUX LIVE FOOTBALL
+   PREMIUM MATCH CENTRE DESIGN
+========================================= */
+
+/* MATCH PAGE */
+#matchPage {
+    min-height: 100vh;
+    padding: 35px 5% 80px;
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(184,255,53,.07), transparent 55%),
+        #070b0a;
+}
+
+#matchPage .page-heading {
+    max-width: 1250px;
+    margin: 0 auto 30px;
+}
+
+#matchPage .section-subtitle {
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 3px;
+}
+
+#matchPage .page-heading h1 {
+    font-size: clamp(38px, 7vw, 65px);
+    margin: 12px 0;
+}
+
+#matchPage .page-heading p {
+    font-size: 14px;
+}
+
+#matchPage .back-button {
+    margin-top: 20px;
+    background: #17221c;
+    color: var(--green);
+    border: 1px solid rgba(184,255,53,.25);
+}
+
+#matchPage .back-button:hover {
+    background: var(--green);
+    color: #07110b;
+}
+
+#matchPage .section {
+    max-width: 1250px;
+    margin: auto;
+    padding: 0;
+}
+
+/* MAIN MATCH SCOREBOARD */
+.match-details-card {
+    position: relative;
+    overflow: hidden;
+    padding: 35px;
+    margin-bottom: 25px;
+    border: 1px solid rgba(184,255,53,.18);
+    border-radius: 22px;
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(184,255,53,.13), transparent 65%),
+        linear-gradient(145deg, #18241c, #0c120f 75%);
+    box-shadow: 0 18px 55px rgba(0,0,0,.3);
+}
+
+.match-details-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 15%;
+    width: 70%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+}
+
+.match-details-league {
+    text-align: center;
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.match-details-status {
+    width: fit-content;
+    margin: 15px auto 28px;
+    padding: 6px 16px;
+    border-radius: 30px;
+    background: rgba(184,255,53,.1);
+    border: 1px solid rgba(184,255,53,.25);
+    color: var(--green);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+}
+
+.match-details-scoreboard {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 25px;
+    max-width: 850px;
+    margin: auto;
+}
+
+.match-details-team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    min-width: 0;
+    text-align: center;
+}
+
+.match-details-team img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 15px rgba(0,0,0,.4));
+}
+
+.match-details-team > span {
+    font-size: 65px;
+}
+
+.match-details-team strong {
+    color: white;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(19px, 3vw, 30px);
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.match-details-score {
+    text-align: center;
+    min-width: 130px;
+}
+
+.match-details-score > strong {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(38px, 7vw, 65px);
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: var(--green);
+    white-space: nowrap;
+}
+
+.penalty-score {
+    margin-top: 8px;
+    color: #d2dbd2;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.match-details-info {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 28px;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.match-details-info p {
+    font-size: 12px;
+    color: #aab7ad;
+}
+
+/* MATCH TABS */
+.match-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    background: #101714;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    scrollbar-width: none;
+}
+
+.match-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.match-tabs button {
+    flex: 1;
+    min-width: 100px;
+    padding: 13px 16px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #9aa69e;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    transition: .2s ease;
+}
+
+.match-tabs button:hover {
+    transform: none;
+    background: #1b2920;
+    color: white;
+}
+
+.match-tabs button.active {
+    background: var(--green);
+    color: #07110b;
+    box-shadow: 0 4px 15px rgba(184,255,53,.15);
+}
+
+/* TAB CONTENT */
+#matchTabContent {
+    animation: matchFadeIn .3s ease;
+}
+
+@keyframes matchFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.match-info-panel {
+    padding: 25px;
+    margin-bottom: 18px;
+    background: linear-gradient(145deg, #152019, #0d1410);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+
+.match-info-panel h3 {
+    color: var(--green);
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.match-info-panel h4 {
+    color: white;
+    font-size: 17px;
+    margin: 22px 0 12px;
+}
+
+.match-info-panel p {
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255,255,255,.055);
+    color: #c1ccc3;
+    font-size: 13px;
+}
+
+.match-info-panel p:last-child {
+    border-bottom: none;
+}
+
+/* MATCH EVENTS TIMELINE */
+.match-event {
+    position: relative;
+    display: grid;
+    grid-template-columns: 55px 1fr;
+    gap: 12px;
+    padding: 15px;
+    margin: 10px 0;
+    border-left: 3px solid var(--green);
+    border-radius: 8px;
+    background: rgba(255,255,255,.035);
+}
+
+.match-event > strong {
+    color: var(--green);
+    font-size: 13px;
+}
+
+.match-event > span {
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.match-event small {
+    grid-column: 2;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.match-event.away-event {
+    border-left-color: #55aaff;
+}
+
+.match-event.away-event > strong {
+    color: #55aaff;
+}
+
+/* LINEUPS */
+.match-info-panel h4 {
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(184,255,53,.2);
+}
+
+.match-info-panel h4 + p {
+    margin-top: 5px;
+}
+
+.match-info-panel p {
+    transition: .2s;
+}
+
+.match-info-panel p:hover {
+    padding-left: 8px;
+    color: var(--green);
+}
+
+/* EMPTY STATES */
+#matchPage .empty-state {
+    margin: 15px 0;
+    background: #101714;
+    border-color: rgba(184,255,53,.2);
+}
+
+#matchPage .empty-state > span {
+    display: block;
+    font-size: 35px;
+    margin-bottom: 12px;
+}
+
+#matchPage .empty-state p {
+    font-size: 13px;
+}
+
+/* MATCH DETAILS RESPONSIVE DESIGN */
+@media (max-width: 700px) {
+
+    #matchPage {
+        padding: 25px 4% 55px;
+    }
+
+    .match-details-card {
+        padding: 25px 13px;
+        border-radius: 16px;
+    }
+
+    .match-details-scoreboard {
+        gap: 8px;
+    }
+
+    .match-details-team img {
+        width: 65px;
+        height: 65px;
+    }
+
+    .match-details-team > span {
+        font-size: 45px;
+    }
+
+    .match-details-team strong {
+        font-size: 18px;
+    }
+
+    .match-details-score {
+        min-width: 90px;
+    }
+
+    .match-details-score > strong {
+        font-size: 39px;
+        letter-spacing: 1px;
+    }
+
+    .match-details-info {
+        gap: 10px;
+        margin-top: 22px;
+    }
+
+    .match-details-info p {
+        width: 100%;
+        text-align: center;
+    }
+
+    .match-tabs {
+        gap: 5px;
+        padding: 5px;
+    }
+
+    .match-tabs button {
+        min-width: 85px;
+        padding: 12px 9px;
+        font-size: 11px;
+    }
+
+    .match-info-panel {
+        padding: 18px;
+    }
+
+    .match-info-panel h3 {
+        font-size: 21px;
+    }
+}
+
+@media (max-width: 380px) {
+
+    .match-details-team img {
+        width: 52px;
+        height: 52px;
+    }
+
+    .match-details-team strong {
+        font-size: 15px;
+    }
+
+    .match-details-score {
+        min-width: 75px;
+    }
+
+    .match-details-score > strong {
+        font-size: 32px;
+    }
+}
