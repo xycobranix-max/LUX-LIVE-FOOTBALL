@@ -689,11 +689,18 @@ app.get("/api/goal/leagues/:leagueId/fixtures", async (req, res) => {
    GOAL API - LIVE MATCHES
 ========================================= */
 
+
 app.get("/api/goal/fixtures/live", async (req, res) => {
     try {
         const data = await goalAPI("/fixtures/live");
 
-console.log("RAW GOAL LIVE DATA:", JSON.stringify(data, null, 2));
+        console.log("========== GOAL LIVE DIAGNOSTIC ==========");
+        console.log("Success:", data.success);
+        console.log("Source:", data.source);
+        console.log("Count:", data.count);
+        console.log("Timestamp:", data.timestamp);
+        console.log("Full response:", JSON.stringify(data, null, 2));
+        console.log("==========================================");
 
         res.json(data);
 
@@ -707,6 +714,7 @@ console.log("RAW GOAL LIVE DATA:", JSON.stringify(data, null, 2));
         });
     }
 });
+
 
 /* =========================================
    GOAL API - TEAM RESULTS
