@@ -311,6 +311,11 @@ footer a:hover {
   margin: 9px 0;
 }
 
+/* SHOW LUX LOGIN MODAL */
+#loginModal.show {
+    display: flex;
+}
+
 @media (max-width: 700px) {
   header {
     padding: 13px 4%;
