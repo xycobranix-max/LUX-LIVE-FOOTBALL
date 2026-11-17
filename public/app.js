@@ -1422,83 +1422,198 @@ window.showMatchTab = function(tab) {
         return;
     }
 
+    
     // =====================================
-    // LINEUPS
+    // TACTICAL LINEUPS
     // =====================================
 
     if (tab === "lineups") {
 
-        const lineups = match.lineups || [];
+        const lineups = Array.isArray(match.lineups)
+            ? match.lineups
+            : [];
 
-        const renderTeam = (team, label) => {
+        const renderTeam = (team, label, formation) => {
 
             const players = lineups.filter(player =>
-                player.team === team &&
-                player.type !== "coach"
+                player.team === team
             );
 
-            const starters = players.filter(player =>
-                player.type === "starting_lineups"
-            );
+            const starters = players
+                .filter(player => player.type === "starting_lineups")
+                .sort((a, b) =>
+                    Number(a.lineupPosition || 0) -
+                    Number(b.lineupPosition || 0)
+                );
 
             const substitutes = players.filter(player =>
                 player.type === "substitutes"
             );
 
-            const coaches = lineups.filter(player =>
-                player.team === team &&
+            const coaches = players.filter(player =>
                 player.type === "coach"
             );
 
-            return `
-                <div class="match-info-panel">
-                    <h3>${escapeHTML(label)}</h3>
+            // Read the actual formation supplied by Goal API
+            const formationParts = String(formation || "4-2-3-1")
+                .split("-")
+                .map(Number)
+                .filter(number => Number.isFinite(number) && number > 0);
 
-                    <h4>Starting XI</h4>
+            // Position 1 is the goalkeeper.
+            // Remaining players are grouped by formation lines.
+            const lines = [];
+            let playerIndex = 1;
+
+            formationParts.forEach(number => {
+                lines.push(starters.slice(playerIndex, playerIndex + number));
+                playerIndex += number;
+            });
+
+            // Fallback if the formation and lineup counts differ
+            if (
+                starters.length !== 11 ||
+                lines.reduce((total, line) => total + line.length, 0) !== 10
+            ) {
+                lines.length = 0;
+
+                const outfield = starters.slice(1);
+                const count = outfield.length;
+
+                if (count > 0) {
+                    const groups = formationParts.length
+                        ? formationParts
+                        : [4, 2, 3, 1];
+
+                    let index = 0;
+
+                    groups.forEach(size => {
+                        if (index < count) {
+                            lines.push(outfield.slice(index, index + size));
+                            index += size;
+                        }
+                    });
+
+                    if (index < count) {
+                        lines.push(outfield.slice(index));
+                    }
+                }
+            }
+
+            const renderPlayer = player => `
+                <div class="tactical-player" title="${escapeHTML(player.lineupPlayer || "Player")}">
+                    <span class="tactical-shirt">
+                        ${escapeHTML(player.lineupNumber || "")}
+                    </span>
+                    <span class="tactical-player-name">
+                        ${escapeHTML(player.lineupPlayer || "Player")}
+                    </span>
+                </div>
+            `;
+
+            const goalkeeper = starters[0];
+
+            return `
+                <section class="match-info-panel tactical-team-panel">
+
+                    <div class="tactical-team-header">
+                        <div>
+                            <h3>${escapeHTML(label)}</h3>
+                            <span class="tactical-formation">
+                                Formation: ${escapeHTML(formation || "N/A")}
+                            </span>
+                        </div>
+                        <span class="tactical-player-count">
+                            ${starters.length}/11 STARTING
+                        </span>
+                    </div>
 
                     ${
                         starters.length
-                            ? starters.map(player => `
-                                <p>
-                                    <strong>
-                                        ${escapeHTML(player.lineupNumber || "")}
-                                    </strong>
-                                    · ${escapeHTML(player.lineupPlayer || "Player")}
-                                </p>
-                            `).join("")
-                            : "<p>Starting lineup unavailable.</p>"
+                            ? `
+                                <div class="tactical-pitch">
+
+                                    <div class="pitch-halfway"></div>
+                                    <div class="pitch-center-circle"></div>
+                                    <div class="pitch-center-dot"></div>
+                                    <div class="pitch-top-box"></div>
+                                    <div class="pitch-bottom-box"></div>
+
+                                    <div class="tactical-goalkeeper">
+                                        ${goalkeeper ? renderPlayer(goalkeeper) : ""}
+                                    </div>
+
+                                    <div class="tactical-lines">
+                                        ${lines.map(line => `
+                                            <div class="tactical-line">
+                                                ${line.map(renderPlayer).join("")}
+                                            </div>
+                                        `).join("")}
+                                    </div>
+
+                                </div>
+                            `
+                            : `
+                                <div class="empty-state">
+                                    <p>Starting lineup unavailable.</p>
+                                </div>
+                            `
                     }
 
-                    <h4>Substitutes</h4>
+                    <div class="tactical-substitutes">
+                        <h4>SUBSTITUTES (${substitutes.length})</h4>
+
+                        ${
+                            substitutes.length
+                                ? `
+                                    <div class="tactical-sub-list">
+                                        ${substitutes.map(player => `
+                                            <div class="tactical-sub-player">
+                                                <span class="tactical-sub-number">
+                                                    ${escapeHTML(player.lineupNumber || "-")}
+                                                </span>
+                                                <span>
+                                                    ${escapeHTML(player.lineupPlayer || "Player")}
+                                                </span>
+                                            </div>
+                                        `).join("")}
+                                    </div>
+                                `
+                                : "<p>No substitutes available.</p>"
+                        }
+                    </div>
 
                     ${
-                        substitutes.length
-                            ? substitutes.map(player => `
-                                <p>
-                                    <strong>
-                                        ${escapeHTML(player.lineupNumber || "")}
-                                    </strong>
-                                    · ${escapeHTML(player.lineupPlayer || "Player")}
+                        coaches.length
+                            ? `
+                                <p class="tactical-coach">
+                                    <strong>Coach:</strong>
+                                    ${escapeHTML(coaches.map(coach =>
+                                        coach.lineupPlayer || "N/A"
+                                    ).join(", "))}
                                 </p>
-                            `).join("")
-                            : "<p>Substitutes unavailable.</p>"
+                            `
+                            : ""
                     }
 
-                    ${
-                        coaches.map(coach => `
-                            <p>
-                                <strong>Coach:</strong>
-                                ${escapeHTML(coach.lineupPlayer || "N/A")}
-                            </p>
-                        `).join("")
-                    }
-                </div>
+                </section>
             `;
         };
 
         content.innerHTML = lineups.length
-            ? renderTeam("home", match.homeTeamName || "Home") +
-              renderTeam("away", match.awayTeamName || "Away")
+            ? `
+                ${renderTeam(
+                    "home",
+                    match.homeTeamName || "Home",
+                    match.homeTeamSystem
+                )}
+
+                ${renderTeam(
+                    "away",
+                    match.awayTeamName || "Away",
+                    match.awayTeamSystem
+                )}
+            `
             : `
                 <div class="empty-state">
                     <span>👥</span>
@@ -1509,6 +1624,7 @@ window.showMatchTab = function(tab) {
 
         return;
     }
+
 
     // =====================================
     // STATISTICS DASHBOARD
