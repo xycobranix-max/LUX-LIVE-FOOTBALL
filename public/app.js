@@ -151,8 +151,9 @@ async function apiRequest(url) {
     return result;
 }
 
+
 // =========================================
-// LIVE MATCHES
+// LIVE MATCHES - GOAL API
 // =========================================
 
 async function loadLiveMatches() {
@@ -161,12 +162,16 @@ async function loadLiveMatches() {
     if (!container) return;
 
     try {
-        const result = await apiRequest("/api/matches/live");
+        const result = await apiRequest("/api/goal/fixtures/live");
 
-        displayLiveMatches(result.matches || []);
+        const matches = Array.isArray(result.data)
+            ? result.data
+            : [];
+
+        displayLiveMatches(matches);
 
     } catch (error) {
-        console.error("Live matches:", error.message);
+        console.error("Goal API live matches:", error.message);
 
         container.innerHTML = `
             <div class="empty-state">
@@ -183,63 +188,164 @@ function displayLiveMatches(matches) {
 
     if (!container) return;
 
-    if (!matches.length) {
+    if (!Array.isArray(matches) || matches.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
                 <span>⚽</span>
                 <h3>No live matches currently</h3>
-                <p>Live matches from our six competitions will appear here.</p>
+                <p>Live football matches will appear here when available.</p>
             </div>
         `;
         return;
     }
 
-    container.innerHTML = matches.map(match => `
-        <div class="match-card">
+    container.innerHTML = matches.map(match => {
 
-            <div class="match-header">
-                <span>${escapeHTML(match.competition || "Football")}</span>
+        const homeTeam =
+            match.homeTeamName ||
+            match.homeTeam?.name ||
+            "Home";
 
-                <span class="live-indicator">
-                    <span class="live-dot"></span>
-                    LIVE ${match.elapsed != null ? escapeHTML(match.elapsed) + "'" : ""}
-                </span>
+        const awayTeam =
+            match.awayTeamName ||
+            match.awayTeam?.name ||
+            "Away";
+
+        const homeScore = match.homeTeamScore ?? "-";
+        const awayScore = match.awayTeamScore ?? "-";
+
+        const homeBadge =
+            match.teamHomeBadge ||
+            match.homeTeam?.badge ||
+            "";
+
+        const awayBadge =
+            match.teamAwayBadge ||
+            match.awayTeam?.badge ||
+            "";
+
+        const competition =
+            match.leagueName ||
+            match.league?.name ||
+            "Football";
+
+        const minute = match.matchMinute;
+
+        const status = match.matchStatus || "LIVE";
+
+        const isLive = status.toUpperCase() === "LIVE";
+
+        const events = Array.isArray(match.events)
+            ? match.events
+            : [];
+
+        const goalEvents = events.filter(event =>
+            String(event.type || "").toUpperCase() === "GOAL"
+        );
+
+        const goalHTML = goalEvents.map(event => {
+
+            const scorer =
+                event.homeScorer ||
+                event.awayScorer ||
+                "Unknown scorer";
+
+            const team = event.homeScorer
+                ? homeTeam
+                : awayTeam;
+
+            return `
+                <div class="live-goal-event">
+                    ⚽ ${escapeHTML(scorer)}
+                    <span>${escapeHTML(team)} · ${escapeHTML(event.time)}'</span>
+                </div>
+            `;
+        }).join("");
+
+        const safeBadge = url =>
+            typeof url === "string" &&
+            /^https:\/\//i.test(url)
+                ? escapeAttribute(url)
+                : "";
+
+        const homeImage = safeBadge(homeBadge);
+        const awayImage = safeBadge(awayBadge);
+
+        return `
+            <div class="match-card">
+
+                <div class="match-header">
+
+                    <span>
+                        ${escapeHTML(competition)}
+                    </span>
+
+                    <span class="live-indicator">
+                        <span class="live-dot"></span>
+                        ${isLive
+                            ? `LIVE ${minute != null ? escapeHTML(minute) + "'" : ""}`
+                            : escapeHTML(status)
+                        }
+                    </span>
+
+                </div>
+
+                <div class="match-teams">
+
+                    <div class="team">
+
+                        ${homeImage
+                            ? `<img class="team-logo"
+                                    src="${homeImage}"
+                                    alt="${escapeHTML(homeTeam)}"
+                                    loading="lazy">`
+                            : `<span class="team-logo">⚽</span>`
+                        }
+
+                        <strong>${escapeHTML(homeTeam)}</strong>
+
+                    </div>
+
+                    <div class="match-score">
+
+                        ${escapeHTML(homeScore)}
+                        -
+                        ${escapeHTML(awayScore)}
+
+                    </div>
+
+                    <div class="team">
+
+                        ${awayImage
+                            ? `<img class="team-logo"
+                                    src="${awayImage}"
+                                    alt="${escapeHTML(awayTeam)}"
+                                    loading="lazy">`
+                            : `<span class="team-logo">⚽</span>`
+                        }
+
+                        <strong>${escapeHTML(awayTeam)}</strong>
+
+                    </div>
+
+                </div>
+
+                ${goalHTML
+                    ? `<div class="live-goals">${goalHTML}</div>`
+                    : ""
+                }
+
+                <div class="live-match-footer">
+                    <span>${escapeHTML(match.matchPeriod || "")}</span>
+                    <span>${escapeHTML(match.matchStadium || "")}</span>
+                </div>
+
             </div>
+        `;
 
-            <div class="match-teams">
-
-                <div class="team">
-                    ${match.homeLogo
-                        ? `<img class="team-logo" src="${escapeAttribute(match.homeLogo)}" alt="">`
-                        : `<span class="team-logo">⚽</span>`
-                    }
-                    ${escapeHTML(match.homeTeam || "Home")}
-                </div>
-
-                <div class="match-score">
-                    ${escapeHTML(match.homeScore ?? "-")}
-                    -
-                    ${escapeHTML(match.awayScore ?? "-")}
-                </div>
-
-                <div class="team">
-                    ${match.awayLogo
-                        ? `<img class="team-logo" src="${escapeAttribute(match.awayLogo)}" alt="">`
-                        : `<span class="team-logo">⚽</span>`
-                    }
-                    ${escapeHTML(match.awayTeam || "Away")}
-                </div>
-
-            </div>
-
-            <button class="watch-btn"
-                onclick="watchMatch('${escapeAttribute(match.id)}')">
-                View Match
-            </button>
-
-        </div>
-    `).join("");
+    }).join("");
 }
+
 
 // =========================================
 // UPCOMING FIXTURES
