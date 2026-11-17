@@ -1,0 +1,189 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080d0a">
+    <title>LUX ADMIN | LUX LIVE FOOTBALL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<div class="admin-shell">
+
+    <header class="admin-header">
+        <a href="/" class="brand">
+            <span class="brand-mark">L</span>
+            <span>LUX <strong>ADMIN</strong></span>
+        </a>
+        <span class="admin-status">
+            <span class="status-dot"></span> ADMIN PANEL
+        </span>
+    </header>
+
+    <!-- LOGIN -->
+    <section id="loginSection" class="login-section">
+        <div class="login-card">
+            <div class="login-icon">🔐</div>
+            <span class="eyebrow">RESTRICTED ACCESS</span>
+            <h1>ADMIN LOGIN</h1>
+            <p>Sign in to manage LUX LIVE FOOTBALL highlights.</p>
+
+            <form id="loginForm">
+                <label for="adminEmail">ADMIN EMAIL</label>
+                <input id="adminEmail" type="email"
+                    placeholder="Administrator email" required>
+
+                <label for="adminPassword">PASSWORD</label>
+                <input id="adminPassword" type="password"
+                    placeholder="Your password" required>
+
+                <button type="submit" id="loginButton">
+                    SIGN IN <span>→</span>
+                </button>
+            </form>
+
+            <p id="loginMessage" class="message" role="alert"></p>
+            <a href="/" class="back-link">← Back to website</a>
+        </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboardSection" hidden>
+
+        <div class="dashboard-heading">
+            <div>
+                <span class="eyebrow">CONTROL CENTRE</span>
+                <h1>HIGHLIGHTS <span>MANAGER</span></h1>
+                <p>Manage videos displayed on your football website.</p>
+            </div>
+
+            <button id="logoutButton" class="logout-button">
+                LOG OUT
+            </button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span>TOTAL VIDEOS</span>
+                <strong id="totalVideos">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>PUBLISHED</span>
+                <strong id="publishedVideos">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>DRAFTS</span>
+                <strong id="draftVideos">0</strong>
+            </div>
+        </div>
+
+        <!-- ADD / EDIT FORM -->
+        <div class="admin-panel">
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">VIDEO MANAGEMENT</span>
+                    <h2 id="formHeading">ADD NEW HIGHLIGHT</h2>
+                </div>
+                <span class="panel-icon">▶</span>
+            </div>
+
+            <form id="highlightForm">
+
+                <input type="hidden" id="highlightId">
+
+                <div class="form-grid">
+                    <div class="form-group full">
+                        <label for="videoTitle">VIDEO TITLE *</label>
+                        <input id="videoTitle" type="text"
+                            placeholder="e.g. Arsenal vs Chelsea Highlights"
+                            maxlength="150" required>
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="youtubeUrl">YOUTUBE VIDEO URL *</label>
+                        <input id="youtubeUrl" type="url"
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="homeTeam">HOME TEAM</label>
+                        <input id="homeTeam" type="text"
+                            placeholder="Home team">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="awayTeam">AWAY TEAM</label>
+                        <input id="awayTeam" type="text"
+                            placeholder="Away team">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="league">COMPETITION</label>
+                        <input id="league" type="text"
+                            placeholder="Premier League">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="matchDate">MATCH DATE</label>
+                        <input id="matchDate" type="date">
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="videoDescription">DESCRIPTION</label>
+                        <textarea id="videoDescription"
+                            rows="3" maxlength="1000"
+                            placeholder="Write a short video description..."></textarea>
+                    </div>
+                </div>
+
+                <label class="publish-option">
+                    <input id="publishVideo" type="checkbox">
+                    <span>Publish immediately on the website</span>
+                </label>
+
+                <div class="form-actions">
+                    <button type="submit" id="saveButton">
+                        SAVE HIGHLIGHT →
+                    </button>
+                    <button type="button" id="cancelEditButton" hidden>
+                        CANCEL EDIT
+                    </button>
+                </div>
+
+                <p id="formMessage" class="message" role="alert"></p>
+            </form>
+        </div>
+
+        <!-- VIDEO LIST -->
+        <div class="admin-panel">
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">YOUR VIDEO LIBRARY</span>
+                    <h2>MANAGE HIGHLIGHTS</h2>
+                </div>
+                <button id="refreshButton" class="refresh-button">
+                    ↻ REFRESH
+                </button>
+            </div>
+
+            <div id="highlightsList" class="highlights-list">
+                <p class="loading-message">Loading your videos...</p>
+            </div>
+        </div>
+
+    </section>
+
+    <footer class="admin-footer">
+        LUX LIVE FOOTBALL © 2026 · ADMIN CONTROL CENTRE
+    </footer>
+
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>
