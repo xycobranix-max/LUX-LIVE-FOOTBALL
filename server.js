@@ -1155,6 +1155,62 @@ app.post("/api/auth/login", async (req, res) => {
 });
 
 
+// =========================================
+// VERIFY LUX USER SESSION
+// =========================================
+
+app.get("/api/auth/me", async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization || "";
+
+        const token = authHeader.startsWith("Bearer ")
+            ? authHeader.slice(7)
+            : "";
+
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Please sign in."
+            });
+        }
+
+        const { data, error } =
+            await supabaseAuth.auth.getUser(token);
+
+        if (error || !data.user) {
+            return res.status(401).json({
+                success: false,
+                message: "Your session is invalid or expired."
+            });
+        }
+
+        const email = (data.user.email || "")
+            .trim()
+            .toLowerCase();
+
+        const role = email === ADMIN_EMAIL
+            ? "admin"
+            : "user";
+
+        return res.json({
+            success: true,
+            role,
+            user: {
+                email
+            }
+        });
+
+    } catch (error) {
+        console.error("LUX SESSION ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to verify your session."
+        });
+    }
+});
+
+
  // ADMIN LOGIN
 app.post("/api/admin/login", async (req, res) => {
     try {
