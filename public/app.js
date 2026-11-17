@@ -525,7 +525,10 @@ function displayFixtures(fixtures) {
         const hasScore = homeScore !== "" && awayScore !== "";
 
         return `
-            <div class="fixture-card">
+    <div class="fixture-card"
+         role="button"
+         tabindex="0"
+         onclick="openMatchDetails('${escapeAttribute(match.id)}')">
 
                 <div class="fixture-header">
                     <span>
@@ -1111,3 +1114,18 @@ setInterval(() => {
     loadLiveMatches();
     loadFixtures();
 }, 60000);
+
+// =========================================
+// OPEN MATCH DETAILS PAGE
+// =========================================
+
+window.openMatchDetails = function(fixtureId) {
+
+    if (!fixtureId) {
+        console.error("Match ID is missing");
+        return;
+    }
+
+    window.location.href =
+        `?page=match&id=${encodeURIComponent(fixtureId)}`;
+};
