@@ -1011,6 +1011,150 @@ function getYouTubeVideoId(value) {
 }
 
 
+/* =========================================
+   LUX USER REGISTRATION
+========================================= */
+
+app.post("/api/auth/signup", async (req, res) => {
+    try {
+        const email = String(req.body.email || "")
+            .trim()
+            .toLowerCase();
+
+        const password = req.body.password;
+
+        if (!email || typeof password !== "string" || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required."
+            });
+        }
+
+        if (email === ADMIN_EMAIL) {
+            return res.status(403).json({
+                success: false,
+                message: "This email is reserved for the administrator."
+            });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must contain at least 8 characters."
+            });
+        }
+
+        const { data, error } = await supabaseAuth.auth.signUp({
+            email,
+            password
+        });
+
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: data.session
+                ? "Account created successfully. You can now sign in."
+                : "Account created. Please check your email to confirm your account."
+        });
+
+    } catch (error) {
+        console.error("User registration error:", error.message);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to create your account."
+        });
+    }
+});
+
+
+/* =========================================
+   LUX USER AND ADMIN SIGN-IN
+========================================= */
+
+app.post("/api/auth/login", async (req, res) => {
+    try {
+        const ip = req.ip;
+        const now = Date.now();
+        const windowMs = 15 * 60 * 1000;
+
+        let attempts = adminLoginAttempts.get(ip);
+
+        if (!attempts || now - attempts.started > windowMs) {
+            attempts = { count: 0, started: now };
+        }
+
+        if (attempts.count >= 5) {
+            return res.status(429).json({
+                success: false,
+                message: "Too many login attempts. Try again later."
+            });
+        }
+
+        const email = String(req.body.email || "")
+            .trim()
+            .toLowerCase();
+
+        const password = req.body.password;
+
+        if (!email || typeof password !== "string" || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required."
+            });
+        }
+
+        attempts.count++;
+        adminLoginAttempts.set(ip, attempts);
+
+        const { data, error } =
+            await supabaseAuth.auth.signInWithPassword({
+                email,
+                password
+            });
+
+        if (error || !data.user || !data.session) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password."
+            });
+        }
+
+        const authenticatedEmail = (
+            data.user.email || ""
+        ).trim().toLowerCase();
+
+        const isAdmin = authenticatedEmail === ADMIN_EMAIL;
+
+        adminLoginAttempts.delete(ip);
+
+        return res.json({
+            success: true,
+            role: isAdmin ? "admin" : "user",
+            access_token: data.session.access_token,
+            expires_at: data.session.expires_at,
+            user: {
+                email: authenticatedEmail
+            }
+        });
+
+    } catch (error) {
+        console.error("LUX sign-in error:", error.message);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to sign in. Please try again."
+        });
+    }
+});
+
+
  // ADMIN LOGIN
 app.post("/api/admin/login", async (req, res) => {
     try {
