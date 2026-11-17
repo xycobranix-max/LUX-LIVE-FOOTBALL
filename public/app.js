@@ -1783,3 +1783,179 @@ window.showMatchTab = function(tab) {
         `;
     }
 };
+
+
+/* =========================================
+   LUX LIVE FOOTBALL
+   GOAL API — HIGHLIGHTS
+========================================= */
+
+window.highlightVideos = [];
+
+window.loadHighlights = async function () {
+    const grid = document.getElementById("highlightsGrid");
+    const count = document.getElementById("highlightsCount");
+
+    if (!grid) return;
+
+    try {
+        const result = await apiRequest("/api/goal/videos/recent");
+
+        const videos = Array.isArray(result.data)
+            ? result.data
+            : [];
+
+        window.highlightVideos = videos.filter(video => {
+            try {
+                const url = new URL(video.url);
+                return (
+                    ["www.youtube.com", "youtube.com", "youtube-nocookie.com"]
+                        .includes(url.hostname) &&
+                    url.pathname.startsWith("/embed/")
+                );
+            } catch {
+                return false;
+            }
+        });
+
+        if (count) {
+            count.textContent =
+                `${window.highlightVideos.length} videos`;
+        }
+
+        if (!window.highlightVideos.length) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <span>⚽</span>
+                    <h3>No highlights available</h3>
+                    <p>New football videos will appear here when available.</p>
+                </div>
+            `;
+            return;
+        }
+
+        grid.innerHTML = window.highlightVideos.map((video, index) => {
+            const fixture = video.fixture || {};
+
+            const home = fixture.homeTeamName || "Home Team";
+            const away = fixture.awayTeamName || "Away Team";
+
+            const score =
+                fixture.homeTeamScore != null &&
+                fixture.awayTeamScore != null
+                    ? `${fixture.homeTeamScore} - ${fixture.awayTeamScore}`
+                    : "Match Highlights";
+
+            const league = fixture.league?.name || "Football";
+
+            const youtubeId = video.url.split("/embed/")[1]?.split(/[?&]/)[0];
+
+            const thumbnail = youtubeId
+                ? `https://i.ytimg.com/vi/${encodeURIComponent(youtubeId)}/hqdefault.jpg`
+                : "";
+
+            const safe = value => String(value).replace(/[&<>"']/g, char => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            })[char]);
+
+            return `
+                <article class="highlight-card"
+                         onclick="window.playHighlight(${index})">
+
+                    <div class="highlight-image">
+                        ${thumbnail
+                            ? `<img src="${thumbnail}"
+                                    alt="${safe(home)} vs ${safe(away)}"
+                                    loading="lazy">`
+                            : `<span>▶</span>`
+                        }
+                        <span class="highlight-play">▶</span>
+                    </div>
+
+                    <div class="highlight-card-content">
+                        <span class="highlight-league">${safe(league)}</span>
+                        <h3>${safe(home)} vs ${safe(away)}</h3>
+                        <p class="highlight-score">${safe(score)}</p>
+                        <span class="highlight-watch">▶ Watch Highlights</span>
+                    </div>
+
+                </article>
+            `;
+        }).join("");
+
+    } catch (error) {
+        console.error("Highlights loading error:", error);
+
+        grid.innerHTML = `
+            <div class="empty-state">
+                <span>⚠️</span>
+                <h3>Highlights unavailable</h3>
+                <p>Please try again later.</p>
+            </div>
+        `;
+
+        if (count) count.textContent = "Unavailable";
+    }
+};
+
+
+/* =========================================
+   PLAY SELECTED HIGHLIGHT
+========================================= */
+
+window.playHighlight = function (index) {
+    const video = window.highlightVideos[index];
+
+    if (!video) return;
+
+    const player = document.getElementById("highlightPlayer");
+    const info = document.getElementById("highlightVideoInfo");
+
+    if (!player) return;
+
+    const safe = value => String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+
+    const fixture = video.fixture || {};
+    const home = fixture.homeTeamName || "Home Team";
+    const away = fixture.awayTeamName || "Away Team";
+
+    const embedURL = new URL(video.url);
+    embedURL.searchParams.set("autoplay", "1");
+    embedURL.searchParams.set("rel", "0");
+
+    player.innerHTML = `
+        <iframe
+            src="${safe(embedURL.href)}"
+            title="${safe(video.title || "Football Highlights")}"
+            allow="accelerometer; autoplay; clipboard-write;
+                   encrypted-media; gyroscope; picture-in-picture;
+                   web-share"
+            allowfullscreen
+            loading="lazy">
+        </iframe>
+    `;
+
+    if (info) {
+        info.hidden = false;
+        info.innerHTML = `
+            <h2>${safe(video.title || "Match Highlights")}</h2>
+            <h3>${safe(home)} vs ${safe(away)}</h3>
+            <p>${safe(fixture.league?.name || "Football")}</p>
+        `;
+    }
+
+    player.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+};
