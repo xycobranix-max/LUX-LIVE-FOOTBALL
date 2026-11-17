@@ -1067,7 +1067,10 @@ app.post("/api/admin/login", async (req, res) => {
             });
         }
 
-        if (data.user.email.toLowerCase() !== ADMIN_EMAIL) {
+        if (
+    !data.user.email ||
+    data.user.email.toLowerCase() !== ADMIN_EMAIL
+) {
             return res.status(403).json({
                 success: false,
                 message: "Administrator access denied."
@@ -1311,7 +1314,14 @@ app.patch("/api/admin/highlights/:id", requireAdmin, async (req, res) => {
             });
         }
 
-        updates.updated_at = new Date().toISOString();
+        if (Object.keys(updates).length === 0) {
+    return res.status(400).json({
+        success: false,
+        message: "No valid changes were provided."
+    });
+}
+
+updates.updated_at = new Date().toISOString();
 
         const { data, error } = await supabaseDB
             .from("manual_highlights")
