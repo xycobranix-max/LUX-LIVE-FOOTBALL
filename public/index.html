@@ -452,55 +452,57 @@
 </div>
 
 
-    <!-- HIGHLIGHTS PAGE -->
-    <div id="highlightsPage" data-page-section="highlights" hidden>
+<!-- HIGHLIGHTS PAGE -->
+<div id="highlightsPage" data-page-section="highlights" hidden>
 
-        <div class="page-heading">
-            <span class="section-subtitle">RELIVE THE MOMENTS</span>
-            <h1>FOOTBALL HIGHLIGHTS</h1>
-            <p>Discover memorable goals, skills and football moments.</p>
-        </div>
-
-        <section class="section">
-
-            <div class="section-heading">
-                <h2>Latest Highlights</h2>
-            </div>
-
-            <div class="highlights-grid">
-
-                <div class="highlight-card">
-                    <div class="highlight-image">▶</div>
-                    <h3>Match Highlights</h3>
-                    <p>Watch memorable football moments.</p>
-                </div>
-
-                <div class="highlight-card">
-                    <div class="highlight-image">▶</div>
-                    <h3>Best Goals</h3>
-                    <p>Relive incredible goals and skills.</p>
-                </div>
-
-                <div class="highlight-card">
-                    <div class="highlight-image">▶</div>
-                    <h3>Football Moments</h3>
-                    <p>Discover unforgettable match moments.</p>
-                </div>
-
-            </div>
-
-            <p class="player-note">
-                Highlight videos can be added using authorised video sources.
-            </p>
-
-        </section>
-
-        <section class="section">
-            <a href="?page=home" class="back-home">← Back to Home</a>
-        </section>
-
+    <div class="page-heading">
+        <span class="section-subtitle">RELIVE THE MOMENTS</span>
+        <h1>FOOTBALL HIGHLIGHTS</h1>
+        <p>Watch real match highlights from the Goal API.</p>
     </div>
 
+    <section class="section">
+
+        <div class="section-heading">
+            <h2>Latest Highlights</h2>
+            <span id="highlightsCount">Loading...</span>
+        </div>
+
+        <!-- VIDEO PLAYER -->
+        <div id="highlightPlayer" class="highlight-player">
+            <div class="highlight-player-placeholder">
+                <span>▶</span>
+                <h3>Select a highlight to watch</h3>
+                <p>Choose a video from the latest highlights below.</p>
+            </div>
+        </div>
+
+        <!-- VIDEO INFORMATION -->
+        <div id="highlightVideoInfo" class="highlight-video-info" hidden></div>
+
+        <!-- HIGHLIGHT VIDEOS -->
+        <div id="highlightsGrid" class="highlights-grid">
+
+            <div class="empty-state">
+                <span>⚽</span>
+                <h3>Loading highlights...</h3>
+                <p>Please wait while we retrieve videos.</p>
+            </div>
+
+        </div>
+
+        <p class="player-note">
+            Videos are provided by their respective video sources.
+        </p>
+
+    </section>
+
+    <section class="section">
+        <a href="?page=home" class="back-home">← Back to Home</a>
+    </section>
+
+</div>
+   
 </main>
 
 
