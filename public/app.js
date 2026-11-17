@@ -625,6 +625,10 @@ function showLogin() {
 }
 
 function closeLogin() {
+    if (document.body.classList.contains("lux-auth-locked")) {
+        return;
+    }
+
     const modal = document.getElementById("loginModal");
 
     if (modal) {
@@ -768,6 +772,8 @@ async function login() {
         }
 
         message.textContent = "Welcome to LUX! You are signed in.";
+
+document.body.classList.remove("lux-auth-locked");
 
         const loginButton = document.querySelector(".login-btn");
 
@@ -2150,3 +2156,69 @@ window.playHighlight = function (index) {
         block: "start"
     });
 };
+
+/* =========================================
+   LUX MEMBERS-ONLY SESSION GUARD
+========================================= */
+
+(async function luxSessionGuard() {
+    document.body.classList.add("lux-auth-locked");
+
+    const modal = document.getElementById("loginModal");
+
+    if (modal) {
+        modal.classList.add("show");
+    }
+
+    window.luxAuthMode = "login";
+
+    const token = sessionStorage.getItem("lux_user_token");
+
+    if (!token) {
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/auth/me", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error("Session expired.");
+        }
+
+        if (result.role === "admin") {
+            sessionStorage.setItem("lux_user_role", "admin");
+            sessionStorage.setItem("lux_admin_token", token);
+            window.location.replace("/admin.html");
+            return;
+        }
+
+        sessionStorage.setItem("lux_user_role", "user");
+        sessionStorage.setItem("lux_user_email", result.user.email);
+
+        document.body.classList.remove("lux-auth-locked");
+
+        if (modal) {
+            modal.classList.remove("show");
+        }
+
+        const loginButton = document.querySelector(".login-btn");
+
+        if (loginButton) {
+            loginButton.textContent = "My Account";
+        }
+
+    } catch (error) {
+        sessionStorage.removeItem("lux_user_token");
+        sessionStorage.removeItem("lux_user_email");
+        sessionStorage.removeItem("lux_user_role");
+        sessionStorage.removeItem("lux_admin_token");
+
+        console.log("LUX session:", error.message);
+    }
+})();
