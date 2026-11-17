@@ -1416,6 +1416,266 @@ app.use((error, req, res, next) => {
 });
 
 
+// =========================================
+// LUX LIVE TV - STREAM MANAGEMENT API
+// =========================================
+
+// Convert an authorised YouTube URL into an embed URL
+function getYouTubeEmbedUrl(value) {
+    try {
+        const url = new URL(value);
+
+        if (url.protocol !== "https:") return null;
+
+        const host = url.hostname.toLowerCase();
+        let videoId = "";
+
+        if (host === "youtu.be") {
+            videoId = url.pathname.split("/").filter(Boolean)[0] || "";
+        } else if (
+            host === "youtube.com" ||
+            host === "www.youtube.com" ||
+            host === "m.youtube.com" ||
+            host === "youtube-nocookie.com" ||
+            host === "www.youtube-nocookie.com"
+        ) {
+            if (url.pathname === "/watch") {
+                videoId = url.searchParams.get("v") || "";
+            } else {
+                const parts = url.pathname.split("/").filter(Boolean);
+                if (["embed", "live", "shorts"].includes(parts[0])) {
+                    videoId = parts[1] || "";
+                }
+            }
+        }
+
+        if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) return null;
+
+        return `https://www.youtube-nocookie.com/embed/${videoId}`;
+    } catch {
+        return null;
+    }
+}
+
+
+// PUBLIC: Get currently published streams
+app.get("/api/live-streams", async (req, res) => {
+    try {
+        const { data, error } = await supabaseDB
+            .from("live_streams")
+            .select("*")
+            .eq("is_published", true)
+            .in("status", ["live", "scheduled"])
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            streams: data || []
+        });
+    } catch (error) {
+        console.error("Public streams error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Could not load live streams"
+        });
+    }
+});
+
+
+// ADMIN: Get all streams
+app.get("/api/admin/live-streams", requireAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabaseDB
+            .from("live_streams")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        res.json({ success: true, streams: data || [] });
+    } catch (error) {
+        console.error("Admin streams error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Could not load streams"
+        });
+    }
+});
+
+
+// ADMIN: Add a YouTube stream
+app.post("/api/admin/live-streams", requireAdmin, async (req, res) => {
+    try {
+        const {
+            title,
+            home_team,
+            away_team,
+            competition,
+            source_url,
+            status,
+            scheduled_at,
+            description,
+            is_published
+        } = req.body;
+
+        if (!title || !source_url) {
+            return res.status(400).json({
+                success: false,
+                message: "Stream title and YouTube URL are required"
+            });
+        }
+
+        const playback_url = getYouTubeEmbedUrl(source_url);
+
+        if (!playback_url) {
+            return res.status(400).json({
+                success: false,
+                message: "Enter a valid HTTPS YouTube video or live-stream URL"
+            });
+        }
+
+        const allowedStatuses = ["scheduled", "live", "ended"];
+
+        if (status && !allowedStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid stream status"
+            });
+        }
+
+        const { data, error } = await supabaseDB
+            .from("live_streams")
+            .insert([{
+                title: String(title).trim(),
+                home_team: home_team || null,
+                away_team: away_team || null,
+                competition: competition || null,
+                stream_type: "external",
+                source_url: source_url.trim(),
+                playback_url,
+                status: status || "scheduled",
+                scheduled_at: scheduled_at || null,
+                description: description || null,
+                is_published: is_published === true
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.status(201).json({
+            success: true,
+            message: "Live stream added successfully",
+            stream: data
+        });
+    } catch (error) {
+        console.error("Add stream error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Could not add live stream"
+        });
+    }
+});
+
+
+// ADMIN: Update stream details or status
+app.patch("/api/admin/live-streams/:id", requireAdmin, async (req, res) => {
+    try {
+        const allowedFields = [
+            "title",
+            "home_team",
+            "away_team",
+            "competition",
+            "status",
+            "scheduled_at",
+            "description",
+            "is_published"
+        ];
+
+        const updates = {};
+
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
+        if (req.body.source_url !== undefined) {
+            const playback_url = getYouTubeEmbedUrl(req.body.source_url);
+
+            if (!playback_url) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Enter a valid HTTPS YouTube URL"
+                });
+            }
+
+            updates.source_url = req.body.source_url.trim();
+            updates.playback_url = playback_url;
+        }
+
+        if (
+            updates.status !== undefined &&
+            !["scheduled", "live", "ended"].includes(updates.status)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid stream status"
+            });
+        }
+
+        updates.updated_at = new Date().toISOString();
+
+        const { data, error } = await supabaseDB
+            .from("live_streams")
+            .update(updates)
+            .eq("id", req.params.id)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            message: "Stream updated successfully",
+            stream: data
+        });
+    } catch (error) {
+        console.error("Update stream error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Could not update stream"
+        });
+    }
+});
+
+
+// ADMIN: Delete a stream
+app.delete("/api/admin/live-streams/:id", requireAdmin, async (req, res) => {
+    try {
+        const { error } = await supabaseDB
+            .from("live_streams")
+            .delete()
+            .eq("id", req.params.id);
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            message: "Stream deleted successfully"
+        });
+    } catch (error) {
+        console.error("Delete stream error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Could not delete stream"
+        });
+    }
+});
+
+
 // START SERVER
 app.listen(PORT, "0.0.0.0", () => {
     console.log("================================");
