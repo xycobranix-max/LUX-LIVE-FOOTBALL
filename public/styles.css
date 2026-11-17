@@ -1531,3 +1531,236 @@ body.dashboard-open {
         font-size: 10px;
     }
 }
+
+
+/* =========================================
+   LUX TACTICAL LINEUP PITCH
+========================================= */
+
+.tactical-team-panel {
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.tactical-team-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.tactical-team-header h3 {
+    margin: 0 0 5px;
+    color: var(--white);
+}
+
+.tactical-formation,
+.tactical-player-count {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.tactical-player-count {
+    color: var(--green);
+    font-weight: 800;
+}
+
+.tactical-pitch {
+    position: relative;
+    min-height: 490px;
+    padding: 22px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,.55);
+    border-radius: 12px;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            #176b36 0px,
+            #176b36 65px,
+            #19783c 65px,
+            #19783c 130px
+        );
+}
+
+.pitch-halfway {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: rgba(255,255,255,.65);
+}
+
+.pitch-center-circle {
+    position: absolute;
+    width: 105px;
+    height: 105px;
+    border: 1px solid rgba(255,255,255,.65);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.pitch-center-dot {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: white;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.pitch-top-box,
+.pitch-bottom-box {
+    position: absolute;
+    left: 50%;
+    width: 48%;
+    height: 65px;
+    border: 1px solid rgba(255,255,255,.65);
+    transform: translateX(-50%);
+}
+
+.pitch-top-box {
+    top: 0;
+    border-top: 0;
+}
+
+.pitch-bottom-box {
+    bottom: 0;
+    border-bottom: 0;
+}
+
+.tactical-goalkeeper,
+.tactical-lines {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
+}
+
+.tactical-lines {
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 14px;
+    padding: 12px 0;
+}
+
+.tactical-line {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 4px;
+}
+
+.tactical-player {
+    min-width: 0;
+    max-width: 82px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    text-align: center;
+}
+
+.tactical-shirt {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: #10251a;
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 900;
+    box-shadow: 0 3px 9px rgba(0,0,0,.35);
+}
+
+.tactical-player-name {
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    text-shadow: 0 1px 3px #000;
+}
+
+.tactical-substitutes {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border);
+}
+
+.tactical-substitutes h4 {
+    color: var(--green);
+    font-size: 13px;
+    margin: 0 0 12px;
+}
+
+.tactical-sub-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.tactical-sub-player {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface2);
+    color: var(--white);
+    font-size: 12px;
+}
+
+.tactical-sub-number {
+    color: var(--green);
+    font-weight: 900;
+    min-width: 20px;
+}
+
+.tactical-coach {
+    margin-top: 15px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+    .tactical-pitch {
+        min-height: 430px;
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    .tactical-player {
+        max-width: 65px;
+    }
+
+    .tactical-shirt {
+        width: 30px;
+        height: 30px;
+        font-size: 11px;
+    }
+
+    .tactical-player-name {
+        font-size: 9px;
+    }
+
+    .tactical-sub-list {
+        grid-template-columns: 1fr;
+    }
+}
