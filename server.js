@@ -492,7 +492,7 @@ app.get("/api/matches/live", async (req, res, next) => {
 
         const result = await cached(
             "all-live-matches",
-            5 * 60 * 1000,
+             30 * 1000,
             () => footballAPI("fixtures", {
                 live: "all"
             })
