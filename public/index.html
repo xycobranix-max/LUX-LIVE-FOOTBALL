@@ -808,6 +808,7 @@ window.escapeLiveText = function (value) {
     })[character]);
 };
 
+
 window.playLiveStream = function (index) {
     const stream = window.luxLiveStreams[index];
 
@@ -819,24 +820,40 @@ window.playLiveStream = function (index) {
 
     const playbackUrl = stream.playback_url;
 
-    if (!playbackUrl || !playbackUrl.startsWith("https://www.youtube-nocookie.com/embed/")) {
-        player.innerHTML = "<p>This stream does not have a supported YouTube playback URL.</p>";
+    if (
+        !playbackUrl ||
+        !playbackUrl.startsWith("https://www.youtube-nocookie.com/embed/")
+    ) {
+        player.innerHTML = "<p>Unsupported stream URL.</p>";
         return;
     }
 
     player.innerHTML = `
-        <iframe
-            src="${playbackUrl}"
-            title="${escapeLiveText(stream.title)}"
-            width="100%"
-            height="100%"
-            style="aspect-ratio:16/9; border:0;"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen>
-        </iframe>
+        <div class="live-active-player">
+            <div class="live-active-heading">
+                <span>🔴 LIVE NOW</span>
+                <h3>${escapeLiveText(stream.title)}</h3>
+            </div>
+
+            <iframe
+                src="${playbackUrl}?autoplay=0&playsinline=1&rel=0"
+                title="${escapeLiveText(stream.title)}"
+                width="100%"
+                height="100%"
+                style="display:block;width:100%;aspect-ratio:16/9;border:0;"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen>
+            </iframe>
+        </div>
     `;
+
+    player.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
 };
+
 
 /* LOAD LIVE TV WHEN PLAYER PAGE OPENS */
 
