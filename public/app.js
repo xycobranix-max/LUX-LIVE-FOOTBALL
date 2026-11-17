@@ -632,27 +632,164 @@ function closeLogin() {
     }
 }
 
-// =========================================
-// LOGIN PLACEHOLDER
-// =========================================
+
+/* =========================================
+   LUX ACCOUNT AUTHENTICATION
+========================================= */
+
+window.luxAuthMode = "login";
+
+function switchAuthMode() {
+    window.luxAuthMode =
+        window.luxAuthMode === "login" ? "signup" : "login";
+
+    const signup = window.luxAuthMode === "signup";
+
+    document.getElementById("authTitle").textContent =
+        signup ? "Create Your LUX Account" : "Welcome to LUX";
+
+    document.getElementById("authDescription").textContent =
+        signup
+            ? "Join LUX LIVE FOOTBALL today."
+            : "Sign in to your LUX football account.";
+
+    document.getElementById("authSubmitButton").textContent =
+        signup ? "Create Account" : "Sign In";
+
+    document.getElementById("authSwitchText").textContent =
+        signup ? "Already have an account?" : "Don't have an account?";
+
+    document.getElementById("authSwitchButton").textContent =
+        signup ? "Sign In" : "Create Account";
+
+    document.getElementById("loginPassword").value = "";
+    document.getElementById("loginMessage").textContent = "";
+}
 
 async function login() {
     const emailInput = document.getElementById("loginEmail");
     const passwordInput = document.getElementById("loginPassword");
     const message = document.getElementById("loginMessage");
+    const submitButton = document.getElementById("authSubmitButton");
 
-    if (!emailInput || !passwordInput || !message) return;
+    if (!emailInput || !passwordInput || !message || !submitButton) {
+        return;
+    }
 
-    const email = emailInput.value.trim();
+    const email = emailInput.value.trim().toLowerCase();
     const password = passwordInput.value;
+    const signup = window.luxAuthMode === "signup";
 
     if (!email || !password) {
         message.textContent = "Enter your email and password.";
         return;
     }
 
-    message.textContent =
-        "Login service is not connected yet. Please try again later.";
+    if (signup && password.length < 8) {
+        message.textContent = "Password must have at least 8 characters.";
+        return;
+    }
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Please wait...";
+    message.textContent = "";
+
+    try {
+        const response = await fetch(
+            signup ? "/api/auth/signup" : "/api/auth/login",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, password })
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || "Authentication failed.");
+        }
+
+        if (signup) {
+            message.textContent = result.message;
+            passwordInput.value = "";
+
+            window.luxAuthMode = "login";
+
+            document.getElementById("authTitle").textContent =
+                "Account Created";
+
+            document.getElementById("authDescription").textContent =
+                "Your LUX account has been registered.";
+
+            document.getElementById("authSubmitButton").textContent =
+                "Sign In";
+
+            document.getElementById("authSwitchText").textContent =
+                "Already have an account?";
+
+            document.getElementById("authSwitchButton").textContent =
+                "Sign In";
+
+            return;
+        }
+
+        if (!result.access_token) {
+            throw new Error("Login succeeded but no session was returned.");
+        }
+
+        sessionStorage.setItem(
+            "lux_user_token",
+            result.access_token
+        );
+
+        sessionStorage.setItem(
+            "lux_user_email",
+            result.user.email
+        );
+
+        sessionStorage.setItem(
+            "lux_user_role",
+            result.role
+        );
+
+        if (result.role === "admin") {
+            sessionStorage.setItem(
+                "lux_admin_token",
+                result.access_token
+            );
+
+            message.textContent = "Administrator verified. Opening dashboard...";
+
+            window.location.href = "/admin.html";
+            return;
+        }
+
+        message.textContent = "Welcome to LUX! You are signed in.";
+
+        const loginButton = document.querySelector(".login-btn");
+
+        if (loginButton) {
+            loginButton.textContent = "My Account";
+        }
+
+        setTimeout(() => {
+            closeLogin();
+        }, 1200);
+
+    } catch (error) {
+        message.textContent = error.message;
+    } finally {
+        submitButton.disabled = false;
+
+        if (window.luxAuthMode === "signup") {
+            submitButton.textContent = "Create Account";
+        } else {
+            submitButton.textContent = "Sign In";
+        }
+    }
 }
 
 // =========================================
