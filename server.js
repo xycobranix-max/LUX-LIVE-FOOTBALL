@@ -684,6 +684,28 @@ app.get("/api/goal/leagues/:leagueId/fixtures", async (req, res) => {
     }
 });
 
+
+/* =========================================
+   GOAL API - LIVE MATCHES
+========================================= */
+
+app.get("/api/goal/fixtures/live", async (req, res) => {
+    try {
+        const data = await goalAPI("/fixtures/live");
+
+        res.json(data);
+
+    } catch (error) {
+        console.error("Goal live fixtures error:", error.message);
+
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve live matches from Goal API",
+            error: error.message
+        });
+    }
+});
+
 /* =========================================
    GOAL API - TEAM RESULTS
 ========================================= */
