@@ -448,7 +448,7 @@ app.get("/api/health", (req, res) => {
 });
 
 // LIST ALL COMPETITIONS
-app.get("/api/competitions", (req, res) => {
+app.get("/api/competitions", requireMember, (req, res) => {
     const list = Object.entries(competitions).map(([slug, item]) => ({
         slug,
         ...item
@@ -462,7 +462,7 @@ app.get("/api/competitions", (req, res) => {
 });
 
 // GET TEAMS FOR A COMPETITION
-app.get("/api/leagues/:slug/teams", async (req, res, next) => {
+app.get("/api/leagues/:slug/teams", requireMember, async (req, res) => {
     try {
         const result = await getCompetitionTeams(req.params.slug);
 
@@ -476,7 +476,7 @@ app.get("/api/leagues/:slug/teams", async (req, res, next) => {
 });
 
 // GET STANDINGS
-app.get("/api/leagues/:slug/standings", async (req, res, next) => {
+app.get("/api/leagues/:slug/standings", requireMember, async (req, res) => {
     try {
         const competition = competitions[req.params.slug];
 
@@ -510,7 +510,7 @@ app.get("/api/leagues/:slug/standings", async (req, res, next) => {
 });
 
 // GET FIXTURES FOR A COMPETITION
-app.get("/api/leagues/:slug/fixtures", async (req, res, next) => {
+app.get("/api/leagues/:slug/fixtures", requireMember, async (req, res) => {
     try {
         const competition = competitions[req.params.slug];
 
@@ -549,7 +549,7 @@ app.get("/api/leagues/:slug/fixtures", async (req, res, next) => {
 });
 
 // GET INDIVIDUAL TEAM PROFILE
-app.get("/api/teams/:id", async (req, res, next) => {
+app.get("/api/teams/:id", requireMember, async (req, res) => {
     try {
         const teamId = Number(req.params.id);
 
@@ -572,7 +572,7 @@ app.get("/api/teams/:id", async (req, res, next) => {
 });
 
 // LIVE MATCHES ACROSS ALL SIX COMPETITIONS
-app.get("/api/matches/live", async (req, res, next) => {
+app.get("/api/matches/live", requireMember, async (req, res) => {
     try {
         const allowedLeagueIds = new Set(
             Object.values(competitions).map(item => item.id)
@@ -601,7 +601,7 @@ app.get("/api/matches/live", async (req, res, next) => {
 });
 
 // UPCOMING FIXTURES ACROSS ALL SIX COMPETITIONS
-app.get("/api/matches/fixtures", async (req, res, next) => {
+app.get("/api/matches/fixtures", requireMember, async (req, res) => {
     try {
         const results = await Promise.allSettled(
             Object.keys(competitions).map(async slug => {
@@ -645,7 +645,7 @@ app.get("/api/matches/fixtures", async (req, res, next) => {
 });
 
 // SINGLE MATCH
-app.get("/api/matches/:id", async (req, res, next) => {
+app.get("/api/matches/:id", requireMember, async (req, res) => {
     try {
         const matchId = Number(req.params.id);
 
@@ -713,7 +713,7 @@ app.get("/api/platform", (req, res) => {
 // GOAL API LEAGUE TEAMS
 // =========================================
 
-app.get("/api/goal/leagues/:leagueId/teams", async (req, res) => {
+app.get("/api/goal/leagues/:leagueId/teams", requireMember, async (req, res) => {
     try {
         const { leagueId } = req.params;
 
@@ -735,7 +735,7 @@ app.get("/api/goal/leagues/:leagueId/teams", async (req, res) => {
 });
 
 // GOAL API - LIST AVAILABLE LEAGUES
-app.get("/api/goal/leagues", async (req, res) => {
+app.get("/api/goal/leagues", requireMember, async (req, res) => {
     try {
         const data = await goalAPI("/leagues");
 
@@ -756,7 +756,7 @@ app.get("/api/goal/leagues", async (req, res) => {
    GOAL API - LEAGUE FIXTURES
 ========================================= */
 
-app.get("/api/goal/leagues/:leagueId/fixtures", async (req, res) => {
+app.get("/api/goal/leagues/:leagueId/fixtures", requireMember, async (req, res) => {
     try {
         const data = await goalAPI(
             `/leagues/${encodeURIComponent(req.params.leagueId)}/fixtures`
@@ -778,7 +778,7 @@ app.get("/api/goal/leagues/:leagueId/fixtures", async (req, res) => {
 ========================================= */
 
 
-app.get("/api/goal/fixtures/live", async (req, res) => {
+app.get("/api/goal/fixtures/live", requireMember, async (req, res) => {
     try {
         const data = await goalAPI("/fixtures/live");
 
