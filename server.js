@@ -63,6 +63,45 @@ const supabaseDB = createClient(
     }
 );
 
+// VERIFY AUTHENTICATED LUX MEMBERS
+async function requireMember(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization || "";
+
+        const token = authHeader.startsWith("Bearer ")
+            ? authHeader.slice(7)
+            : "";
+
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Please sign in to access LUX football data."
+            });
+        }
+
+        const { data, error } = await supabaseAuth.auth.getUser(token);
+
+        if (error || !data.user) {
+            return res.status(401).json({
+                success: false,
+                message: "Your LUX session is invalid or expired."
+            });
+        }
+
+        req.luxUser = data.user;
+
+        next();
+
+    } catch (error) {
+        console.error("LUX MEMBER AUTH ERROR:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to verify your LUX account."
+        });
+    }
+}
+
 // FREE PLAN SEASONS
 const FREE_PLAN_SEASONS = [2024, 2023, 2022];
 
