@@ -1790,6 +1790,7 @@ window.showMatchTab = function(tab) {
    GOAL API — HIGHLIGHTS
 ========================================= */
 
+
 window.highlightVideos = [];
 
 window.loadHighlights = async function () {
@@ -1798,16 +1799,65 @@ window.loadHighlights = async function () {
 
     if (!grid) return;
 
+    grid.innerHTML = `
+        <div class="empty-state">
+            <span>⚽</span>
+            <h3>Loading highlights...</h3>
+        </div>
+    `;
+
+    const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+
     try {
-        const result = await apiRequest("/api/goal/videos/recent");
+        // FETCH BOTH VIDEO SOURCES
+        const [goalResult, manualResult] = await Promise.allSettled([
+            apiRequest("/api/goal/videos/recent"),
+            apiRequest("/api/manual-highlights")
+        ]);
 
-        const videos = Array.isArray(result.data)
-            ? result.data
-            : [];
+        // GOAL API VIDEOS
+        const goalVideos =
+            goalResult.status === "fulfilled" &&
+            Array.isArray(goalResult.value?.data)
+                ? goalResult.value.data
+                : [];
 
-        window.highlightVideos = videos.filter(video => {
+        // MANUALLY ADDED ADMIN VIDEOS
+        const manualVideos =
+            manualResult.status === "fulfilled" &&
+            Array.isArray(manualResult.value?.data)
+                ? manualResult.value.data
+                : [];
+
+        // FORMAT MANUAL VIDEOS TO MATCH THE DISPLAY STRUCTURE
+        const formattedManualVideos = manualVideos.map(video => ({
+            source: "manual",
+            title: video.title,
+            url: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(video.youtube_video_id)}`,
+            fixture: {
+                homeTeamName: video.home_team || "Home Team",
+                awayTeamName: video.away_team || "Away Team",
+                league: {
+                    name: video.league || "Football"
+                },
+                homeTeamScore: null,
+                awayTeamScore: null
+            },
+            description: video.description || "",
+            matchDate: video.match_date || ""
+        }));
+
+        // VALIDATE GOAL API YOUTUBE VIDEOS
+        const validGoalVideos = goalVideos.filter(video => {
             try {
                 const url = new URL(video.url);
+
                 return (
                     ["www.youtube.com", "youtube.com", "youtube-nocookie.com"]
                         .includes(url.hostname) &&
@@ -1816,7 +1866,16 @@ window.loadHighlights = async function () {
             } catch {
                 return false;
             }
-        });
+        }).map(video => ({
+            ...video,
+            source: "goal"
+        }));
+
+        // COMBINE BOTH SOURCES
+        window.highlightVideos = [
+            ...formattedManualVideos,
+            ...validGoalVideos
+        ];
 
         if (count) {
             count.textContent =
@@ -1834,6 +1893,7 @@ window.loadHighlights = async function () {
             return;
         }
 
+        // DISPLAY VIDEO CARDS
         grid.innerHTML = window.highlightVideos.map((video, index) => {
             const fixture = video.fixture || {};
 
@@ -1848,19 +1908,13 @@ window.loadHighlights = async function () {
 
             const league = fixture.league?.name || "Football";
 
-            const youtubeId = video.url.split("/embed/")[1]?.split(/[?&]/)[0];
+            const youtubeId = video.url.match(
+                /\/embed\/([a-zA-Z0-9_-]{11})/
+            )?.[1];
 
             const thumbnail = youtubeId
                 ? `https://i.ytimg.com/vi/${encodeURIComponent(youtubeId)}/hqdefault.jpg`
                 : "";
-
-            const safe = value => String(value).replace(/[&<>"']/g, char => ({
-                "&": "&amp;",
-                "<": "&lt;",
-                ">": "&gt;",
-                '"': "&quot;",
-                "'": "&#39;"
-            })[char]);
 
             return `
                 <article class="highlight-card"
@@ -1878,7 +1932,7 @@ window.loadHighlights = async function () {
 
                     <div class="highlight-card-content">
                         <span class="highlight-league">${safe(league)}</span>
-                        <h3>${safe(home)} vs ${safe(away)}</h3>
+                        <h3>${safe(video.title || `${home} vs ${away}`)}</h3>
                         <p class="highlight-score">${safe(score)}</p>
                         <span class="highlight-watch">▶ Watch Highlights</span>
                     </div>
