@@ -757,6 +757,96 @@ app.get("/api/goal/teams/:teamId/upcoming", async (req, res) => {
 });
 
 
+/* =========================================
+   LUX LIVE FOOTBALL
+   MATCH DETAILS - GOAL API
+========================================= */
+
+// MATCH DETAILS
+app.get("/api/goal/fixtures/:fixtureId", async (req, res) => {
+    try {
+        const { fixtureId } = req.params;
+
+        const data = await goalAPI(
+            `/fixtures/${encodeURIComponent(fixtureId)}`
+        );
+
+        res.json(data);
+
+    } catch (error) {
+        console.error("Match details error:", error.message);
+
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve match details"
+        });
+    }
+});
+
+// MATCH EVENTS
+app.get("/api/goal/fixtures/:fixtureId/events", async (req, res) => {
+    try {
+        const { fixtureId } = req.params;
+
+        const data = await goalAPI(
+            `/fixtures/${encodeURIComponent(fixtureId)}/events`
+        );
+
+        res.json(data);
+
+    } catch (error) {
+        console.error("Match events error:", error.message);
+
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve match events"
+        });
+    }
+});
+
+// MATCH LINEUPS
+app.get("/api/goal/fixtures/:fixtureId/lineups", async (req, res) => {
+    try {
+        const { fixtureId } = req.params;
+
+        const data = await goalAPI(
+            `/fixtures/${encodeURIComponent(fixtureId)}/lineups`
+        );
+
+        res.json(data);
+
+    } catch (error) {
+        console.error("Match lineups error:", error.message);
+
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve match lineups"
+        });
+    }
+});
+
+// MATCH STATISTICS
+app.get("/api/goal/fixtures/:fixtureId/statistics", async (req, res) => {
+    try {
+        const { fixtureId } = req.params;
+
+        const data = await goalAPI(
+            `/fixtures/${encodeURIComponent(fixtureId)}/statistics`
+        );
+
+        res.json(data);
+
+    } catch (error) {
+        console.error("Match statistics error:", error.message);
+
+        res.status(502).json({
+            success: false,
+            message: "Unable to retrieve match statistics"
+        });
+    }
+});
+
+
 // API NOT FOUND
 app.use("/api", (req, res) => {
     res.status(404).json({
