@@ -1129,3 +1129,347 @@ window.openMatchDetails = function(fixtureId) {
     window.location.href =
         `?page=match&id=${encodeURIComponent(fixtureId)}`;
 };
+
+
+/* =========================================
+   LUX LIVE FOOTBALL
+   MATCH DETAILS FRONTEND
+========================================= */
+
+window.currentMatchDetails = null;
+
+// LOAD MATCH DETAILS
+window.loadMatchDetails = async function(fixtureId) {
+
+    const container = document.getElementById("matchDetailsContent");
+
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="empty-state">
+            <span>⚽</span>
+            <h3>Loading match details...</h3>
+            <p>Please wait.</p>
+        </div>
+    `;
+
+    try {
+
+        const result = await apiRequest(
+            `/api/goal/fixtures/${encodeURIComponent(fixtureId)}`
+        );
+
+        if (!result || !result.success || !result.data) {
+            throw new Error("Match information was not found.");
+        }
+
+        window.currentMatchDetails = result.data;
+
+        renderMatchDetails(result.data);
+
+    } catch (error) {
+
+        console.error("Match details error:", error);
+
+        container.innerHTML = `
+            <div class="empty-state">
+                <span>⚠️</span>
+                <h3>Unable to load match details</h3>
+                <p>${escapeHTML(error.message)}</p>
+                <button onclick="window.loadMatchDetails('${escapeAttribute(fixtureId)}')">
+                    Try Again
+                </button>
+            </div>
+        `;
+    }
+};
+
+
+// RENDER MATCH DETAILS
+function renderMatchDetails(match) {
+
+    const container = document.getElementById("matchDetailsContent");
+
+    if (!container) return;
+
+    const home = match.homeTeamName || match.homeTeam?.name || "Home";
+    const away = match.awayTeamName || match.awayTeam?.name || "Away";
+
+    const homeBadge = match.teamHomeBadge || match.homeTeam?.badge || "";
+    const awayBadge = match.teamAwayBadge || match.awayTeam?.badge || "";
+
+    const safeImage = url =>
+        typeof url === "string" && /^https:\/\//i.test(url)
+            ? escapeAttribute(url)
+            : "";
+
+    const homeLogo = safeImage(homeBadge);
+    const awayLogo = safeImage(awayBadge);
+
+    const status = match.matchStatus || "SCHEDULED";
+
+    let homeScore = match.homeTeamScore ?? "-";
+    let awayScore = match.awayTeamScore ?? "-";
+
+    // Show regulation/extra-time result for penalty shootouts
+    if (status === "AFTER_PEN") {
+        homeScore = match.homeTeamFtScore ?? homeScore;
+        awayScore = match.awayTeamFtScore ?? awayScore;
+    }
+
+    const penalties = status === "AFTER_PEN"
+        ? `<p class="penalty-score">
+            Penalties: ${escapeHTML(match.homeTeamPenaltyScore ?? "-")}
+            - ${escapeHTML(match.awayTeamPenaltyScore ?? "-")}
+           </p>`
+        : "";
+
+    const date = match.kickoffUtc
+        ? new Date(match.kickoffUtc).toLocaleString("en-KE", {
+            dateStyle: "medium",
+            timeStyle: "short",
+            timeZone: "Africa/Nairobi"
+        })
+        : "Date unavailable";
+
+    container.innerHTML = `
+
+        <div class="match-details-card">
+
+            <div class="match-details-league">
+                ${escapeHTML(match.leagueName || "Football")}
+                ${match.leagueYear ? " · " + escapeHTML(match.leagueYear) : ""}
+            </div>
+
+            <div class="match-details-status">
+                ${escapeHTML(status.replaceAll("_", " "))}
+            </div>
+
+            <div class="match-details-scoreboard">
+
+                <div class="match-details-team">
+                    ${homeLogo
+                        ? `<img src="${homeLogo}" alt="${escapeHTML(home)}">`
+                        : `<span>⚽</span>`
+                    }
+                    <strong>${escapeHTML(home)}</strong>
+                </div>
+
+                <div class="match-details-score">
+                    <strong>${escapeHTML(homeScore)} - ${escapeHTML(awayScore)}</strong>
+                    ${penalties}
+                </div>
+
+                <div class="match-details-team">
+                    ${awayLogo
+                        ? `<img src="${awayLogo}" alt="${escapeHTML(away)}">`
+                        : `<span>⚽</span>`
+                    }
+                    <strong>${escapeHTML(away)}</strong>
+                </div>
+
+            </div>
+
+            <div class="match-details-info">
+                <p>📅 ${escapeHTML(date)}</p>
+                <p>🏟️ ${escapeHTML(match.matchStadium || "Stadium unavailable")}</p>
+                <p>🏆 ${escapeHTML(match.stageName || match.matchRound || "")}</p>
+                <p>🧑‍⚖️ ${escapeHTML(match.matchReferee || "Referee unavailable")}</p>
+            </div>
+
+        </div>
+
+        <div class="match-tabs">
+            <button class="active" onclick="showMatchTab('overview')">Overview</button>
+            <button onclick="showMatchTab('events')">Events</button>
+            <button onclick="showMatchTab('lineups')">Lineups</button>
+            <button onclick="showMatchTab('statistics')">Statistics</button>
+        </div>
+
+        <div id="matchTabContent"></div>
+    `;
+
+    showMatchTab("overview");
+}
+
+
+// MATCH TAB NAVIGATION
+window.showMatchTab = function(tab) {
+
+    const match = window.currentMatchDetails;
+    const content = document.getElementById("matchTabContent");
+
+    if (!match || !content) return;
+
+    document.querySelectorAll(".match-tabs button").forEach(button => {
+        button.classList.toggle(
+            "active",
+            button.textContent.trim().toLowerCase() === tab
+        );
+    });
+
+    if (tab === "overview") {
+
+        content.innerHTML = `
+            <div class="match-info-panel">
+                <h3>Match Information</h3>
+                <p><strong>Competition:</strong> ${escapeHTML(match.leagueName || "N/A")}</p>
+                <p><strong>Country:</strong> ${escapeHTML(match.countryName || "N/A")}</p>
+                <p><strong>Season:</strong> ${escapeHTML(match.leagueYear || "N/A")}</p>
+                <p><strong>Match status:</strong> ${escapeHTML(match.matchStatus || "N/A")}</p>
+                <p><strong>Venue:</strong> ${escapeHTML(match.matchStadium || "N/A")}</p>
+            </div>
+        `;
+
+        return;
+    }
+
+    if (tab === "events") {
+
+        const events = match.events || [];
+        const cards = match.cards || [];
+        const substitutions = match.substitutions || [];
+
+        const timeline = [
+            ...events.map(item => ({
+                time: item.time,
+                text: `⚽ ${item.homeScorer || item.awayScorer || "Goal"}`,
+                detail: item.info || item.score || "Goal",
+                side: item.homeScorer ? "home" : "away"
+            })),
+
+            ...cards.map(item => ({
+                time: item.time,
+                text: `${String(item.card || "Card").toLowerCase().includes("red") ? "🟥" : "🟨"} ${item.homeFault || item.awayFault || "Player"}`,
+                detail: item.card || "Card",
+                side: item.homeFault ? "home" : "away"
+            })),
+
+            ...substitutions.map(item => ({
+                time: item.time,
+                text: `🔄 ${item.substitution || "Substitution"}`,
+                detail: item.team === "home" ? "Home substitution" : "Away substitution",
+                side: item.team
+            }))
+        ];
+
+        timeline.sort((a, b) => {
+            const timeA = parseInt(a.time, 10) || 0;
+            const timeB = parseInt(b.time, 10) || 0;
+            return timeA - timeB;
+        });
+
+        content.innerHTML = timeline.length
+            ? `
+                <div class="match-info-panel">
+                    <h3>Match Events</h3>
+                    ${timeline.map(item => `
+                        <div class="match-event ${item.side === "away" ? "away-event" : ""}">
+                            <strong>${escapeHTML(item.time || "")}'</strong>
+                            <span>${escapeHTML(item.text)}</span>
+                            <small>${escapeHTML(item.detail)}</small>
+                        </div>
+                    `).join("")}
+                </div>
+            `
+            : `<div class="empty-state">
+                <h3>No match events available</h3>
+                <p>Match events will appear here when available.</p>
+               </div>`;
+
+        return;
+    }
+
+    if (tab === "lineups") {
+
+        const lineups = match.lineups || [];
+
+        const renderTeam = (team, label) => {
+
+            const players = lineups.filter(player =>
+                player.team === team &&
+                player.type !== "coach"
+            );
+
+            const starters = players.filter(player =>
+                player.type === "starting_lineups"
+            );
+
+            const substitutes = players.filter(player =>
+                player.type === "substitutes"
+            );
+
+            const coaches = lineups.filter(player =>
+                player.team === team &&
+                player.type === "coach"
+            );
+
+            return `
+                <div class="match-info-panel">
+                    <h3>${label}</h3>
+
+                    <h4>Starting XI</h4>
+
+                    ${starters.length
+                        ? starters.map(player => `
+                            <p>
+                                ${escapeHTML(player.lineupNumber || "")}
+                                · ${escapeHTML(player.lineupPlayer || "Player")}
+                            </p>
+                        `).join("")
+                        : "<p>Starting lineup unavailable.</p>"
+                    }
+
+                    <h4>Substitutes</h4>
+
+                    ${substitutes.length
+                        ? substitutes.map(player => `
+                            <p>
+                                ${escapeHTML(player.lineupNumber || "")}
+                                · ${escapeHTML(player.lineupPlayer || "Player")}
+                            </p>
+                        `).join("")
+                        : "<p>Substitutes unavailable.</p>"
+                    }
+
+                    ${coaches.map(coach => `
+                        <p><strong>Coach:</strong> ${escapeHTML(coach.lineupPlayer)}</p>
+                    `).join("")}
+                </div>
+            `;
+        };
+
+        content.innerHTML = lineups.length
+            ? renderTeam("home", match.homeTeamName || "Home") +
+              renderTeam("away", match.awayTeamName || "Away")
+            : `<div class="empty-state">
+                <h3>Lineups unavailable</h3>
+                <p>Team lineups have not been provided.</p>
+               </div>`;
+
+        return;
+    }
+
+    if (tab === "statistics") {
+
+        const statistics = match.statistics || [];
+
+        content.innerHTML = statistics.length
+            ? `
+                <div class="match-info-panel">
+                    <h3>Match Statistics</h3>
+                    ${statistics.map(stat => `
+                        <p>
+                            ${escapeHTML(stat.type || stat.name || "Statistic")}
+                            : ${escapeHTML(stat.homeValue ?? stat.home ?? "-")}
+                            - ${escapeHTML(stat.awayValue ?? stat.away ?? "-")}
+                        </p>
+                    `).join("")}
+                </div>
+            `
+            : `<div class="empty-state">
+                <h3>Statistics unavailable</h3>
+                <p>Match statistics will appear here when provided by the data source.</p>
+               </div>`;
+    }
+};
