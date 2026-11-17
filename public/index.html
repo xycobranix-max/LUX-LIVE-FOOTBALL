@@ -528,29 +528,54 @@
 </footer>
 
 
-<!-- LOGIN MODAL -->
-<div class="modal" id="loginModal">
 
+<!-- LUX ACCOUNT MODAL -->
+<div class="modal" id="loginModal">
     <div class="modal-content">
 
         <button class="close-modal" onclick="closeLogin()">×</button>
 
-        <h2>Welcome to LUX</h2>
+        <h2 id="authTitle">Welcome to LUX</h2>
 
-        <p>Sign-in functionality will be connected to the backend.</p>
+        <p id="authDescription">
+            Sign in to your LUX football account.
+        </p>
 
-        <input type="email" placeholder="Email address" id="loginEmail">
+        <input
+            type="email"
+            placeholder="Email address"
+            id="loginEmail"
+            autocomplete="email"
+        >
 
-        <input type="password" placeholder="Password" id="loginPassword">
+        <input
+            type="password"
+            placeholder="Password"
+            id="loginPassword"
+            autocomplete="current-password"
+        >
 
-        <button class="primary-btn full-btn" onclick="login()">
+        <button
+            class="primary-btn full-btn"
+            id="authSubmitButton"
+            onclick="login()">
             Sign In
         </button>
 
         <p id="loginMessage"></p>
 
-    </div>
+        <p style="text-align:center;margin-top:15px;">
+            <span id="authSwitchText">Don't have an account?</span>
+            <button
+                type="button"
+                onclick="switchAuthMode()"
+                id="authSwitchButton"
+                style="background:none;border:0;color:#b8ff35;font-weight:bold;cursor:pointer;">
+                Create Account
+            </button>
+        </p>
 
+    </div>
 </div>
 
 
