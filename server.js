@@ -1,6 +1,8 @@
 
 require("dotenv").config();
 
+const { createClient } = require("@supabase/supabase-js");
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -13,6 +15,53 @@ const API_KEY = process.env.API_FOOTBALL_KEY;
 // GOAL API CONFIGURATION
 const GOAL_API_BASE = "https://api.goal-api.com/v1";
 const GOAL_API_KEY = process.env.GOAL_API_KEY;
+
+// =========================================
+// SUPABASE CONFIGURATION
+// =========================================
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY =
+    process.env.SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_SECRET_KEY =
+    process.env.SUPABASE_SECRET_KEY;
+
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+
+if (
+    !SUPABASE_URL ||
+    !SUPABASE_PUBLISHABLE_KEY ||
+    !SUPABASE_SECRET_KEY ||
+    !ADMIN_EMAIL
+) {
+    throw new Error("Supabase or admin environment variables are missing");
+}
+
+// Used for administrator sign-in and access-token verification
+const supabaseAuth = createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+        }
+    }
+);
+
+// Used only by the backend for database operations
+const supabaseDB = createClient(
+    SUPABASE_URL,
+    SUPABASE_SECRET_KEY,
+    {
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+        }
+    }
+);
 
 // FREE PLAN SEASONS
 const FREE_PLAN_SEASONS = [2024, 2023, 2022];
@@ -916,6 +965,399 @@ app.get("/api/goal/fixtures/:fixtureId/statistics", async (req, res) => {
         res.status(502).json({
             success: false,
             message: "Unable to retrieve match statistics"
+        });
+    }
+});
+
+
+/* =========================================
+   LUX ADMIN — AUTHENTICATION & HIGHLIGHTS
+========================================= */
+
+// Basic login attempt protection
+const adminLoginAttempts = new Map();
+
+function getYouTubeVideoId(value) {
+    try {
+        const url = new URL(value);
+
+        if (url.protocol !== "https:") return null;
+
+        const host = url.hostname.toLowerCase().replace(/^www\./, "");
+
+        let id = null;
+
+        if (host === "youtu.be") {
+            id = url.pathname.split("/")[1];
+        } else if (
+            ["youtube.com", "m.youtube.com", "youtube-nocookie.com"].includes(host)
+        ) {
+            if (url.pathname === "/watch") {
+                id = url.searchParams.get("v");
+            } else {
+                const parts = url.pathname.split("/").filter(Boolean);
+
+                if (["embed", "shorts", "live"].includes(parts[0])) {
+                    id = parts[1];
+                }
+            }
+        }
+
+        return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
+
+    } catch {
+        return null;
+    }
+}
+
+
+// ADMIN LOGIN
+app.post("/api/admin/login", async (req, res) => {
+    try {
+        const ip = req.ip;
+        const now = Date.now();
+        const windowMs = 15 * 60 * 1000;
+
+        let attempts = adminLoginAttempts.get(ip);
+
+        if (!attempts || now - attempts.started > windowMs) {
+            attempts = { count: 0, started: now };
+        }
+
+        if (attempts.count >= 5) {
+            return res.status(429).json({
+                success: false,
+                message: "Too many login attempts. Try again later."
+            });
+        }
+
+        const email = String(req.body.email || "").trim().toLowerCase();
+        const password = req.body.password;
+
+        if (!email || typeof password !== "string" || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required."
+            });
+        }
+
+        if (email !== ADMIN_EMAIL) {
+            attempts.count++;
+            adminLoginAttempts.set(ip, attempts);
+
+            return res.status(401).json({
+                success: false,
+                message: "Invalid administrator credentials."
+            });
+        }
+
+        attempts.count++;
+        adminLoginAttempts.set(ip, attempts);
+
+        const { data, error } =
+            await supabaseAuth.auth.signInWithPassword({
+                email,
+                password
+            });
+
+        if (error || !data.user || !data.session) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid administrator credentials."
+            });
+        }
+
+        if (data.user.email.toLowerCase() !== ADMIN_EMAIL) {
+            return res.status(403).json({
+                success: false,
+                message: "Administrator access denied."
+            });
+        }
+
+        adminLoginAttempts.delete(ip);
+
+        res.json({
+            success: true,
+            access_token: data.session.access_token,
+            expires_at: data.session.expires_at,
+            user: {
+                email: data.user.email
+            }
+        });
+
+    } catch (error) {
+        console.error("Admin login error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Unable to sign in."
+        });
+    }
+});
+
+
+// VERIFY ADMINISTRATOR
+async function requireAdmin(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization || "";
+        const token = authHeader.startsWith("Bearer ")
+            ? authHeader.slice(7)
+            : "";
+
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Administrator login required."
+            });
+        }
+
+        const { data, error } =
+            await supabaseAuth.auth.getUser(token);
+
+        if (
+            error ||
+            !data.user ||
+            !data.user.email ||
+            data.user.email.toLowerCase() !== ADMIN_EMAIL
+        ) {
+            return res.status(403).json({
+                success: false,
+                message: "Administrator access denied."
+            });
+        }
+
+        req.adminUser = data.user;
+        next();
+
+    } catch (error) {
+        console.error("Admin verification error:", error.message);
+
+        res.status(401).json({
+            success: false,
+            message: "Unable to verify administrator."
+        });
+    }
+}
+
+
+// PUBLIC — PUBLISHED MANUAL HIGHLIGHTS
+app.get("/api/manual-highlights", async (req, res) => {
+    try {
+        const { data, error } = await supabaseDB
+            .from("manual_highlights")
+            .select("*")
+            .eq("is_published", true)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            data
+        });
+
+    } catch (error) {
+        console.error("Public highlights error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Unable to retrieve highlights."
+        });
+    }
+});
+
+
+// ADMIN — VIEW ALL MANUAL HIGHLIGHTS
+app.get("/api/admin/highlights", requireAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabaseDB
+            .from("manual_highlights")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        res.json({ success: true, data });
+
+    } catch (error) {
+        console.error("Admin highlights error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Unable to retrieve admin highlights."
+        });
+    }
+});
+
+
+// ADMIN — ADD HIGHLIGHT
+app.post("/api/admin/highlights", requireAdmin, async (req, res) => {
+    try {
+        const {
+            title,
+            youtube_url,
+            home_team,
+            away_team,
+            league,
+            match_date,
+            description,
+            is_published
+        } = req.body;
+
+        if (
+            typeof title !== "string" ||
+            !title.trim() ||
+            typeof youtube_url !== "string"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "A title and YouTube URL are required."
+            });
+        }
+
+        const youtube_video_id = getYouTubeVideoId(youtube_url);
+
+        if (!youtube_video_id) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide a valid YouTube video link."
+            });
+        }
+
+        const { data, error } = await supabaseDB
+            .from("manual_highlights")
+            .insert({
+                title: title.trim(),
+                youtube_url,
+                youtube_video_id,
+                home_team: home_team || null,
+                away_team: away_team || null,
+                league: league || null,
+                match_date: match_date || null,
+                description: description || null,
+                is_published: is_published === true
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.status(201).json({
+            success: true,
+            data
+        });
+
+    } catch (error) {
+        console.error("Add highlight error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Unable to add highlight."
+        });
+    }
+});
+
+
+// ADMIN — EDIT HIGHLIGHT
+app.patch("/api/admin/highlights/:id", requireAdmin, async (req, res) => {
+    try {
+        const updates = {};
+        const allowed = [
+            "title",
+            "youtube_url",
+            "home_team",
+            "away_team",
+            "league",
+            "match_date",
+            "description",
+            "is_published"
+        ];
+
+        for (const field of allowed) {
+            if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+                updates[field] = req.body[field];
+            }
+        }
+
+        if (updates.title !== undefined) {
+            if (typeof updates.title !== "string" || !updates.title.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Title cannot be empty."
+                });
+            }
+
+            updates.title = updates.title.trim();
+        }
+
+        if (updates.youtube_url !== undefined) {
+            const videoId = getYouTubeVideoId(updates.youtube_url);
+
+            if (!videoId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid YouTube video link."
+                });
+            }
+
+            updates.youtube_video_id = videoId;
+        }
+
+        if (updates.is_published !== undefined &&
+            typeof updates.is_published !== "boolean") {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid publishing status."
+            });
+        }
+
+        updates.updated_at = new Date().toISOString();
+
+        const { data, error } = await supabaseDB
+            .from("manual_highlights")
+            .update(updates)
+            .eq("id", req.params.id)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({ success: true, data });
+
+    } catch (error) {
+        console.error("Edit highlight error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Unable to update highlight."
+        });
+    }
+});
+
+
+// ADMIN — DELETE HIGHLIGHT
+app.delete("/api/admin/highlights/:id", requireAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabaseDB
+            .from("manual_highlights")
+            .delete()
+            .eq("id", req.params.id)
+            .select("id")
+            .single();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            message: "Highlight deleted successfully."
+        });
+
+    } catch (error) {
+        console.error("Delete highlight error:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Unable to delete highlight."
         });
     }
 });
