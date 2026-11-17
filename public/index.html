@@ -611,6 +611,12 @@ if (page === "match") {
     }
 }
 
+if (page === "highlights") {
+    if (typeof window.loadHighlights === "function") {
+        window.loadHighlights();
+    }
+}
+
         // Update active dashboard navigation link
         document.querySelectorAll("[data-page-link]").forEach(link => {
             const active = link.dataset.pageLink === page;
