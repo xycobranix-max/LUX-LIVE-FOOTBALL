@@ -1293,7 +1293,12 @@ function renderMatchDetails(match) {
 }
 
 
+
+// =========================================
 // MATCH TAB NAVIGATION
+// PREMIUM MATCH CENTRE
+// =========================================
+
 window.showMatchTab = function(tab) {
 
     const match = window.currentMatchDetails;
@@ -1301,6 +1306,7 @@ window.showMatchTab = function(tab) {
 
     if (!match || !content) return;
 
+    // Update active tab
     document.querySelectorAll(".match-tabs button").forEach(button => {
         button.classList.toggle(
             "active",
@@ -1308,21 +1314,44 @@ window.showMatchTab = function(tab) {
         );
     });
 
+    // =====================================
+    // OVERVIEW
+    // =====================================
+
     if (tab === "overview") {
 
         content.innerHTML = `
             <div class="match-info-panel">
-                <h3>Match Information</h3>
-                <p><strong>Competition:</strong> ${escapeHTML(match.leagueName || "N/A")}</p>
-                <p><strong>Country:</strong> ${escapeHTML(match.countryName || "N/A")}</p>
-                <p><strong>Season:</strong> ${escapeHTML(match.leagueYear || "N/A")}</p>
-                <p><strong>Match status:</strong> ${escapeHTML(match.matchStatus || "N/A")}</p>
-                <p><strong>Venue:</strong> ${escapeHTML(match.matchStadium || "N/A")}</p>
+                <h3>⚽ Match Information</h3>
+
+                <p><strong>Competition:</strong>
+                    ${escapeHTML(match.leagueName || "N/A")}
+                </p>
+
+                <p><strong>Country:</strong>
+                    ${escapeHTML(match.countryName || "N/A")}
+                </p>
+
+                <p><strong>Season:</strong>
+                    ${escapeHTML(match.leagueYear || "N/A")}
+                </p>
+
+                <p><strong>Match status:</strong>
+                    ${escapeHTML(match.matchStatus || "N/A")}
+                </p>
+
+                <p><strong>Venue:</strong>
+                    ${escapeHTML(match.matchStadium || "N/A")}
+                </p>
             </div>
         `;
 
         return;
     }
+
+    // =====================================
+    // EVENTS
+    // =====================================
 
     if (tab === "events") {
 
@@ -1331,6 +1360,7 @@ window.showMatchTab = function(tab) {
         const substitutions = match.substitutions || [];
 
         const timeline = [
+
             ...events.map(item => ({
                 time: item.time,
                 text: `⚽ ${item.homeScorer || item.awayScorer || "Goal"}`,
@@ -1340,7 +1370,11 @@ window.showMatchTab = function(tab) {
 
             ...cards.map(item => ({
                 time: item.time,
-                text: `${String(item.card || "Card").toLowerCase().includes("red") ? "🟥" : "🟨"} ${item.homeFault || item.awayFault || "Player"}`,
+                text: `${
+                    String(item.card || "Card").toLowerCase().includes("red")
+                        ? "🟥"
+                        : "🟨"
+                } ${item.homeFault || item.awayFault || "Player"}`,
                 detail: item.card || "Card",
                 side: item.homeFault ? "home" : "away"
             })),
@@ -1348,7 +1382,9 @@ window.showMatchTab = function(tab) {
             ...substitutions.map(item => ({
                 time: item.time,
                 text: `🔄 ${item.substitution || "Substitution"}`,
-                detail: item.team === "home" ? "Home substitution" : "Away substitution",
+                detail: item.team === "home"
+                    ? "Home substitution"
+                    : "Away substitution",
                 side: item.team
             }))
         ];
@@ -1362,9 +1398,12 @@ window.showMatchTab = function(tab) {
         content.innerHTML = timeline.length
             ? `
                 <div class="match-info-panel">
-                    <h3>Match Events</h3>
+                    <h3>⚡ Match Timeline</h3>
+
                     ${timeline.map(item => `
-                        <div class="match-event ${item.side === "away" ? "away-event" : ""}">
+                        <div class="match-event ${
+                            item.side === "away" ? "away-event" : ""
+                        }">
                             <strong>${escapeHTML(item.time || "")}'</strong>
                             <span>${escapeHTML(item.text)}</span>
                             <small>${escapeHTML(item.detail)}</small>
@@ -1372,13 +1411,20 @@ window.showMatchTab = function(tab) {
                     `).join("")}
                 </div>
             `
-            : `<div class="empty-state">
-                <h3>No match events available</h3>
-                <p>Match events will appear here when available.</p>
-               </div>`;
+            : `
+                <div class="empty-state">
+                    <span>⚽</span>
+                    <h3>No match events available</h3>
+                    <p>Match events will appear here when available.</p>
+                </div>
+            `;
 
         return;
     }
+
+    // =====================================
+    // LINEUPS
+    // =====================================
 
     if (tab === "lineups") {
 
@@ -1406,35 +1452,46 @@ window.showMatchTab = function(tab) {
 
             return `
                 <div class="match-info-panel">
-                    <h3>${label}</h3>
+                    <h3>${escapeHTML(label)}</h3>
 
                     <h4>Starting XI</h4>
 
-                    ${starters.length
-                        ? starters.map(player => `
-                            <p>
-                                ${escapeHTML(player.lineupNumber || "")}
-                                · ${escapeHTML(player.lineupPlayer || "Player")}
-                            </p>
-                        `).join("")
-                        : "<p>Starting lineup unavailable.</p>"
+                    ${
+                        starters.length
+                            ? starters.map(player => `
+                                <p>
+                                    <strong>
+                                        ${escapeHTML(player.lineupNumber || "")}
+                                    </strong>
+                                    · ${escapeHTML(player.lineupPlayer || "Player")}
+                                </p>
+                            `).join("")
+                            : "<p>Starting lineup unavailable.</p>"
                     }
 
                     <h4>Substitutes</h4>
 
-                    ${substitutes.length
-                        ? substitutes.map(player => `
-                            <p>
-                                ${escapeHTML(player.lineupNumber || "")}
-                                · ${escapeHTML(player.lineupPlayer || "Player")}
-                            </p>
-                        `).join("")
-                        : "<p>Substitutes unavailable.</p>"
+                    ${
+                        substitutes.length
+                            ? substitutes.map(player => `
+                                <p>
+                                    <strong>
+                                        ${escapeHTML(player.lineupNumber || "")}
+                                    </strong>
+                                    · ${escapeHTML(player.lineupPlayer || "Player")}
+                                </p>
+                            `).join("")
+                            : "<p>Substitutes unavailable.</p>"
                     }
 
-                    ${coaches.map(coach => `
-                        <p><strong>Coach:</strong> ${escapeHTML(coach.lineupPlayer)}</p>
-                    `).join("")}
+                    ${
+                        coaches.map(coach => `
+                            <p>
+                                <strong>Coach:</strong>
+                                ${escapeHTML(coach.lineupPlayer || "N/A")}
+                            </p>
+                        `).join("")
+                    }
                 </div>
             `;
         };
@@ -1442,34 +1499,171 @@ window.showMatchTab = function(tab) {
         content.innerHTML = lineups.length
             ? renderTeam("home", match.homeTeamName || "Home") +
               renderTeam("away", match.awayTeamName || "Away")
-            : `<div class="empty-state">
-                <h3>Lineups unavailable</h3>
-                <p>Team lineups have not been provided.</p>
-               </div>`;
+            : `
+                <div class="empty-state">
+                    <span>👥</span>
+                    <h3>Lineups unavailable</h3>
+                    <p>Team lineups have not been provided.</p>
+                </div>
+            `;
 
         return;
     }
 
+    // =====================================
+    // STATISTICS DASHBOARD
+    // =====================================
+
     if (tab === "statistics") {
 
-        const statistics = match.statistics || [];
+        const statistics = Array.isArray(match.statistics)
+            ? match.statistics
+            : [];
 
-        content.innerHTML = statistics.length
-            ? `
-                <div class="match-info-panel">
-                    <h3>Match Statistics</h3>
-                    ${statistics.map(stat => `
-                        <p>
-                            ${escapeHTML(stat.type || stat.name || "Statistic")}
-                            : ${escapeHTML(stat.homeValue ?? stat.home ?? "-")}
-                            - ${escapeHTML(stat.awayValue ?? stat.away ?? "-")}
-                        </p>
-                    `).join("")}
+        const homeName = match.homeTeamName || "Home";
+        const awayName = match.awayTeamName || "Away";
+
+        // Safely convert statistic values into numbers for bar widths
+        const getNumericValue = value => {
+
+            if (value === null || value === undefined || value === "") {
+                return null;
+            }
+
+            const number = Number(
+                String(value).replace(/[%\s,]/g, "")
+            );
+
+            return Number.isFinite(number) ? number : null;
+        };
+
+        // Render one comparison row
+        const renderStatistic = stat => {
+
+            const label = stat.type ||
+                stat.name ||
+                stat.statistic ||
+                "Statistic";
+
+            const homeValue = stat.homeValue ??
+                stat.home ??
+                stat.homeTeamValue ??
+                "-";
+
+            const awayValue = stat.awayValue ??
+                stat.away ??
+                stat.awayTeamValue ??
+                "-";
+
+            const homeNumber = getNumericValue(homeValue);
+            const awayNumber = getNumericValue(awayValue);
+
+            const canCompare =
+                homeNumber !== null &&
+                awayNumber !== null;
+
+            const total = canCompare
+                ? Math.max(Math.abs(homeNumber), Math.abs(awayNumber), 1)
+                : 1;
+
+            const homeWidth = canCompare
+                ? Math.max(0, Math.min(100, (Math.abs(homeNumber) / total) * 100))
+                : 0;
+
+            const awayWidth = canCompare
+                ? Math.max(0, Math.min(100, (Math.abs(awayNumber) / total) * 100))
+                : 0;
+
+            return `
+                <div class="stat-comparison-row">
+
+                    <div class="stat-values">
+                        <strong class="home-stat-value">
+                            ${escapeHTML(homeValue)}
+                        </strong>
+
+                        <span class="stat-label">
+                            ${escapeHTML(label)}
+                        </span>
+
+                        <strong class="away-stat-value">
+                            ${escapeHTML(awayValue)}
+                        </strong>
+                    </div>
+
+                    <div class="stat-bars">
+
+                        <div class="stat-bar-track home-stat-track">
+                            <div
+                                class="stat-bar-fill home-stat-fill"
+                                style="width:${homeWidth}%">
+                            </div>
+                        </div>
+
+                        <div class="stat-bar-track away-stat-track">
+                            <div
+                                class="stat-bar-fill away-stat-fill"
+                                style="width:${awayWidth}%">
+                            </div>
+                        </div>
+
+                    </div>
+
                 </div>
-            `
-            : `<div class="empty-state">
-                <h3>Statistics unavailable</h3>
-                <p>Match statistics will appear here when provided by the data source.</p>
-               </div>`;
+            `;
+        };
+
+        if (statistics.length === 0) {
+
+            content.innerHTML = `
+                <div class="empty-state">
+                    <span>📊</span>
+                    <h3>Statistics unavailable</h3>
+                    <p>
+                        Match statistics have not been provided
+                        by the data source for this fixture.
+                    </p>
+                </div>
+            `;
+
+            return;
+        }
+
+        content.innerHTML = `
+
+            <div class="match-info-panel stats-dashboard">
+
+                <div class="stats-heading">
+                    <div>
+                        <span class="stats-subtitle">
+                            MATCH ANALYSIS
+                        </span>
+                        <h3>📊 Match Statistics</h3>
+                    </div>
+                </div>
+
+                <div class="stats-team-heading">
+                    <span>${escapeHTML(homeName)}</span>
+                    <span>${escapeHTML(awayName)}</span>
+                </div>
+
+                <div class="stats-list">
+                    ${statistics.map(renderStatistic).join("")}
+                </div>
+
+                <div class="stats-legend">
+                    <span>
+                        <i class="home-legend"></i>
+                        ${escapeHTML(homeName)}
+                    </span>
+
+                    <span>
+                        <i class="away-legend"></i>
+                        ${escapeHTML(awayName)}
+                    </span>
+                </div>
+
+            </div>
+        `;
     }
 };
