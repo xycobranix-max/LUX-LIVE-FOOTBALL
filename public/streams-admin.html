@@ -56,6 +56,10 @@
 
         <form id="streamForm" class="stream-form">
             <input name="title" placeholder="Stream title *" required>
+            <select name="category" required>
+                <option value="live_football">LIVE FOOTBALL</option>
+                <option value="live_tv">LIVE TV</option>
+            </select>
             <input name="competition" placeholder="Competition">
 
             <input name="home_team" placeholder="Home team">
@@ -144,6 +148,7 @@ async function loadStreams() {
                 <p>${escapeHTML(stream.home_team || "")}
                 ${stream.home_team && stream.away_team ? " vs " : ""}
                 ${escapeHTML(stream.away_team || "")}</p>
+                <p>Category: ${stream.category === "live_tv" ? "LIVE TV" : "LIVE FOOTBALL"}</p>
                 <p>${escapeHTML(stream.competition || "Football")}</p>
                 <p>Status: <span class="stream-status">${escapeHTML(stream.status)}</span></p>
                 <p>Publication: ${stream.is_published ? "Published" : "Draft"}</p>

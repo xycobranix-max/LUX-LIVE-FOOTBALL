@@ -18,7 +18,7 @@ const leagueData = {
         icon: "🏆"
     },
 
-    "champions-league": {
+"champions-league": {
         name: "Champions League",
         country: "Europe",
         icon: "🏆"
@@ -35,13 +35,13 @@ const leagueData = {
         country: "Spain",
         icon: "🏆"
     },
-
+    
     "bundesliga": {
         name: "Bundesliga",
         country: "Germany",
         icon: "🏆"
     },
-
+    
     "afcon": {
         name: "Africa Cup of Nations",
         country: "Africa",
@@ -101,164 +101,42 @@ function initializeNavigation() {
 // =========================================
 
 function initializeSearch() {
-    const input = document.getElementById("homeSearchInput");
-    const button = document.getElementById("homeSearchButton");
-    const results = document.getElementById("homeSearchResults");
-
-    if (!input || !button || !results) return;
-
-    const ids = {
-        "premier-league": "cmr77dvkr005nrx06lp7rvp49",
-        "la-liga": "cmr77dvnt006nrx063v3w622e",
-        "bundesliga": "cmr77dvgm0002rx06rt2uqxii",
-        "champions-league": "cmr77dw3900f5rx06j05wgzv4",
-        "afcon": "cmr77dvhf0015rx069i57rsbo"
-    };
-
-    const esc = value => String(value ?? "").replace(/[&<>"']/g, character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    })[character]);
-
-    async function search() {
-        const query = input.value.trim().toLowerCase();
-
-        if (query.length < 2) {
-            results.hidden = true;
-            return;
-        }
-
-        results.hidden = false;
-        results.innerHTML =
-            "<p class='search-loading'>Searching teams, leagues and matches...</p>";
-
-        const found = [];
-
-        Object.entries(leagueData).forEach(([slug, league]) => {
-            if (
-                league.name.toLowerCase().includes(query) ||
-                slug.includes(query) ||
-                league.country.toLowerCase().includes(query)
-            ) {
-                found.push({
-                    type: "league",
-                    label: league.name,
-                    detail: league.country,
-                    slug
-                });
-            }
-        });
-
-        document.querySelectorAll(
-            "#liveMatches .match-card, #fixtures .fixture-card, #fixtures .match-card"
-        ).forEach(element => {
-            if (element.textContent.toLowerCase().includes(query)) {
-                found.push({
-                    type: "match",
-                    label: element.textContent.trim().replace(/\s+/g, " ").slice(0, 100),
-                    detail: "Match",
-                    element
-                });
-            }
-        });
-
-        const teamGroups = await Promise.allSettled([
-            ...Object.entries(ids).map(async ([slug, id]) => {
-                const response = await apiRequest(
-                    `/api/goal/leagues/${encodeURIComponent(id)}/teams`
-                );
-
-                return (Array.isArray(response.data) ? response.data : [])
-                    .map(team => ({ ...team, _league: slug }));
+    const input=document.getElementById("homeSearchInput"), button=document.getElementById("homeSearchButton"), results=document.getElementById("homeSearchResults");
+    if(!input||!button||!results)return;
+    const ids={"premier-league":"cmr77dvkr005nrx06lp7rvp49","la-liga":"cmr77dvnt006nrx063v3w622e","bundesliga":"cmr77dvgm0002rx06rt2uqxii","champions-league":"cmr77dw3900f5rx06j05wgzv4","afcon":"cmr77dvhf0015rx069i57rsbo"};
+    const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    async function search(){
+        const q=input.value.trim().toLowerCase(); if(q.length<2){results.hidden=true;return;}
+        results.hidden=false;results.innerHTML="<p class='search-loading'>Searching teams, leagues and matches...</p>";
+        const found=[];
+        Object.entries(leagueData).forEach(([slug,l])=>{if(l.name.toLowerCase().includes(q)||slug.includes(q)||l.country.toLowerCase().includes(q))found.push({type:"league",label:l.name,detail:l.country,slug});});
+        document.querySelectorAll("#liveMatches .match-card,#fixtures .fixture-card,#fixtures .match-card").forEach(el=>{if(el.textContent.toLowerCase().includes(q))found.push({type:"match",label:el.textContent.trim().replace(/\s+/g," ").slice(0,100),detail:"Match",element:el});});
+        const teamGroups=await Promise.allSettled([
+            ...Object.entries(ids).map(async([slug,id])=>{
+                const r=await apiRequest(`/api/goal/leagues/${encodeURIComponent(id)}/teams`);
+                return (Array.isArray(r.data)?r.data:[]).map(t=>({...t,_league:slug}));
             }),
-
-            (async () => {
-                const response = await apiRequest("/api/leagues/serie-a/teams");
-
-                return (Array.isArray(response.teams) ? response.teams : [])
-                    .map(team => ({ ...team, _league: "serie-a" }));
-            })()
-        ]);
-
-        const seen = new Set();
-
-        teamGroups.forEach(group => {
-            if (group.status !== "fulfilled") return;
-
-            group.value.forEach(team => {
-                const name =
-                    team.name ||
-                    team.teamName ||
-                    team.displayName ||
-                    "";
-
-                const id = team.id || team.teamId;
-                const key = String(id || name).trim().toLowerCase();
-
-                if (
-                    name.toLowerCase().includes(query) &&
-                    key &&
-                    !seen.has(key)
-                ) {
-                    seen.add(key);
-
-                    found.push({
-                        type: "team",
-                        label: name,
-                        detail: leagueData[team._league]?.name || "Club",
-                        team
-                    });
-                }
-            });
-        });
-
-        if (!found.length) {
-            results.innerHTML =
-                "<p class='search-no-results'>No matching teams, leagues or matches. Try another name.</p>";
-            return;
-        }
-
-        results.innerHTML = found.slice(0, 12).map((item, index) => `
-            <button class="search-result-item"
-                    type="button"
-                    data-result="${index}">
-                <span class="search-result-type">${esc(item.type)}</span>
-                <strong>${esc(item.label)}</strong>
-                <small>${esc(item.detail)}</small>
-            </button>
-        `).join("");
-
-        results.querySelectorAll("[data-result]").forEach((element, index) => {
-            element.addEventListener("click", () => {
-                const item = found[index];
-
-                results.hidden = true;
-
-                if (item.type === "league") {
-                    openLeague(item.slug);
-                } else if (item.type === "team") {
-                    openTeam(item.team);
-                } else if (item.element) {
-                    item.element.scrollIntoView({
-                        behavior: "smooth",
-                        block: "center"
-                    });
-
-                    item.element.click();
-                }
-            });
-        });
+            async()=>{
+                const r=await apiRequest("/api/leagues/serie-a/teams");
+                return (Array.isArray(r.teams)?r.teams:[]).map(t=>({...t,_league:"serie-a"}));
+            }
+        ].map(task=>typeof task==="function"?task():task));
+        const seen=new Set();
+        teamGroups.forEach(group=>{if(group.status!=="fulfilled")return;group.value.forEach(team=>{
+            const name=team.name||team.teamName||team.displayName||"", id=team.id||team.teamId, key=String(id||name).trim().toLowerCase();
+            if(name.toLowerCase().includes(q)&&key&&!seen.has(key)){seen.add(key);found.push({type:"team",label:name,detail:leagueData[team._league]?.name||"Club",team});}
+        });});
+        if(!found.length){results.innerHTML="<p class='search-no-results'>No matching teams, leagues or matches. Try another name.</p>";return;}
+        results.innerHTML=found.slice(0,12).map((x,n)=>`<button class="search-result-item" type="button" data-result="${n}"><span class="search-result-type">${esc(x.type)}</span><strong>${esc(x.label)}</strong><small>${esc(x.detail)}</small></button>`).join("");
+        results.querySelectorAll("[data-result]").forEach((el,n)=>el.addEventListener("click",()=>{
+            const item=found[n];results.hidden=true;
+            if(item.type==="league")openLeague(item.slug);
+            else if(item.type==="team")openTeam(item.team);
+            else if(item.element){item.element.scrollIntoView({behavior:"smooth",block:"center"});item.element.click();}
+        }));
     }
-
-    button.addEventListener("click", search);
-
-    input.addEventListener("keydown", event => {
-        if (event.key === "Enter") search();
-        if (event.key === "Escape") results.hidden = true;
-    });
+    button.addEventListener("click",search);
+    input.addEventListener("keydown",e=>{if(e.key==="Enter")search();if(e.key==="Escape")results.hidden=true;});
 }
 
 // =========================================
@@ -267,6 +145,7 @@ function initializeSearch() {
 
 async function apiRequest(url) {
     const token = sessionStorage.getItem("lux_user_token");
+
     const headers = {};
 
     if (token) {
@@ -288,6 +167,7 @@ async function apiRequest(url) {
 
     return result;
 }
+
 
 // =========================================
 // LIVE MATCHES - GOAL API
@@ -337,6 +217,7 @@ function displayLiveMatches(matches) {
     }
 
     container.innerHTML = matches.map(match => {
+
         const homeTeam =
             match.homeTeamName ||
             match.homeTeam?.name ||
@@ -366,7 +247,9 @@ function displayLiveMatches(matches) {
             "Football";
 
         const minute = match.matchMinute;
+
         const status = match.matchStatus || "LIVE";
+
         const isLive = status.toUpperCase() === "LIVE";
 
         const events = Array.isArray(match.events)
@@ -378,6 +261,7 @@ function displayLiveMatches(matches) {
         );
 
         const goalHTML = goalEvents.map(event => {
+
             const scorer =
                 event.homeScorer ||
                 event.awayScorer ||
@@ -396,7 +280,8 @@ function displayLiveMatches(matches) {
         }).join("");
 
         const safeBadge = url =>
-            typeof url === "string" && /^https:\/\//i.test(url)
+            typeof url === "string" &&
+            /^https:\/\//i.test(url)
                 ? escapeAttribute(url)
                 : "";
 
@@ -405,60 +290,86 @@ function displayLiveMatches(matches) {
 
         return `
             <div class="match-card">
+
                 <div class="match-header">
-                    <span>${escapeHTML(competition)}</span>
+
+                    <span>
+                        ${escapeHTML(competition)}
+                    </span>
 
                     <span class="live-indicator">
                         <span class="live-dot"></span>
                         ${isLive
                             ? `LIVE ${minute != null ? escapeHTML(minute) + "'" : ""}`
-                            : escapeHTML(status)}
+                            : escapeHTML(status)
+                        }
                     </span>
+
                 </div>
 
                 <div class="match-teams">
+
                     <div class="team">
+
                         ${homeImage
                             ? `<img class="team-logo"
                                     src="${homeImage}"
                                     alt="${escapeHTML(homeTeam)}"
                                     loading="lazy">`
-                            : `<span class="team-logo">⚽</span>`}
+                            : `<span class="team-logo">⚽</span>`
+                        }
 
                         <strong>${escapeHTML(homeTeam)}</strong>
+
                     </div>
 
                     <div class="match-score">
-                        ${escapeHTML(homeScore)} - ${escapeHTML(awayScore)}
+
+                        ${escapeHTML(homeScore)}
+                        -
+                        ${escapeHTML(awayScore)}
+
                     </div>
 
                     <div class="team">
+
                         ${awayImage
                             ? `<img class="team-logo"
                                     src="${awayImage}"
                                     alt="${escapeHTML(awayTeam)}"
                                     loading="lazy">`
-                            : `<span class="team-logo">⚽</span>`}
+                            : `<span class="team-logo">⚽</span>`
+                        }
 
                         <strong>${escapeHTML(awayTeam)}</strong>
+
                     </div>
+
                 </div>
 
-                ${goalHTML ? `<div class="live-goals">${goalHTML}</div>` : ""}
+                ${goalHTML
+                    ? `<div class="live-goals">${goalHTML}</div>`
+                    : ""
+                }
 
                 <div class="live-match-footer">
                     <span>${escapeHTML(match.matchPeriod || "")}</span>
                     <span>${escapeHTML(match.matchStadium || "")}</span>
                 </div>
+
             </div>
         `;
+
     }).join("");
 }
+
+
 
 // =========================================
 // UPCOMING FIXTURES - GOAL API
 // =========================================
 
+// Your existing Goal API league database IDs
 const fixtureLeagues = [
     {
         id: "cmr77dvkr005nrx06lp7rvp49",
@@ -475,7 +386,7 @@ const fixtureLeagues = [
     {
         id: "cmr77dvgm0002rx06rt2uqxii",
         name: "Bundesliga"
-    },
+    },    
     {
         id: "cmr77dvhf0015rx069i57rsbo",
         name: "AFCON"
@@ -508,25 +419,27 @@ async function loadFixtures() {
 
                 return matches.map(match => ({
                     ...match,
-                    leagueName: league.name
+                    leagueName: match.leagueName || league.name
                 }));
             })
         );
 
-        const allMatches = [];
+        const fixtures = responses
+            .filter(response => response.status === "fulfilled")
+            .flatMap(response => response.value);
 
-        responses.forEach(response => {
-            if (response.status === "fulfilled") {
-                allMatches.push(...response.value);
-            } else {
-                console.error("Fixture league error:", response.reason);
-            }
-        });
+        const failedCount = responses.filter(
+            response => response.status === "rejected"
+        ).length;
 
-        displayFixtures(allMatches);
+        displayFixtures(fixtures);
+
+        if (failedCount === fixtureLeagues.length) {
+            throw new Error("Unable to retrieve fixtures from Goal API.");
+        }
 
     } catch (error) {
-        console.error("Fixtures error:", error);
+        console.error("Goal API Fixtures:", error.message);
 
         container.innerHTML = `
             <div class="empty-state">
@@ -535,7 +448,6 @@ async function loadFixtures() {
                 <p>${escapeHTML(error.message)}</p>
             </div>
         `;
-    
     }
 }
 
@@ -986,7 +898,6 @@ async function openLeague(leagueId) {
             const name = team.name || team.teamName || team.displayName || "";
             const key = String(team.id || team.teamId || name).trim().toLowerCase();
             if (key && !uniqueTeams.has(key)) uniqueTeams.set(key, team);
-
         });
         const teams = Array.from(uniqueTeams.values());
 
@@ -1393,71 +1304,41 @@ window.openMatchDetails = function(fixtureId) {
 };
 
 
-
 /* =========================================
    LUX LIVE FOOTBALL
    MATCH DETAILS FRONTEND
 ========================================= */
 
-// =========================================
-// LOAD MATCH DETAILS
-// =========================================
+window.currentMatchDetails = null;
 
+// LOAD MATCH DETAILS
 window.loadMatchDetails = async function(fixtureId) {
 
     const container = document.getElementById("matchDetailsContent");
 
-    if (!container) {
-        console.error("Match details container not found.");
-        return;
-    }
-
-    if (!fixtureId) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <h3>Match unavailable</h3>
-                <p>Missing match ID.</p>
-            </div>
-        `;
-        return;
-    }
+    if (!container) return;
 
     container.innerHTML = `
-        <div class="match-loading">
-            <div class="loading-spinner"></div>
-            <p>Loading match details...</p>
+        <div class="empty-state">
+            <span>⚽</span>
+            <h3>Loading match details...</h3>
+            <p>Please wait.</p>
         </div>
     `;
 
     try {
 
-        // Goal API match details endpoint
-        const response = await fetch(
+        const result = await apiRequest(
             `/api/goal/fixtures/${encodeURIComponent(fixtureId)}`
         );
 
-        if (!response.ok) {
-            throw new Error(
-                `Unable to retrieve match details (${response.status})`
-            );
+        if (!result || !result.success || !result.data) {
+            throw new Error("Match information was not found.");
         }
 
-        const result = await response.json();
+        window.currentMatchDetails = result.data;
 
-        const match =
-            result.data ||
-            result.fixture ||
-            result.match ||
-            result.response?.[0] ||
-            result;
-
-        if (!match || typeof match !== "object") {
-            throw new Error("Invalid match information received.");
-        }
-
-        window.currentMatchDetails = match;
-
-        renderMatchDetails(match);
+        renderMatchDetails(result.data);
 
     } catch (error) {
 
@@ -1468,10 +1349,7 @@ window.loadMatchDetails = async function(fixtureId) {
                 <span>⚠️</span>
                 <h3>Unable to load match details</h3>
                 <p>${escapeHTML(error.message)}</p>
-
-                <button
-                    type="button"
-                    onclick="window.loadMatchDetails('${escapeAttribute(fixtureId)}')">
+                <button onclick="window.loadMatchDetails('${escapeAttribute(fixtureId)}')">
                     Try Again
                 </button>
             </div>
@@ -1480,10 +1358,7 @@ window.loadMatchDetails = async function(fixtureId) {
 };
 
 
-// =========================================
 // RENDER MATCH DETAILS
-// =========================================
-
 function renderMatchDetails(match) {
 
     const container = document.getElementById("matchDetailsContent");
@@ -1589,6 +1464,7 @@ function renderMatchDetails(match) {
 
     showMatchTab("overview");
 }
+
 
 
 // =========================================
@@ -1719,6 +1595,7 @@ window.showMatchTab = function(tab) {
         return;
     }
 
+    
     // =====================================
     // TACTICAL LINEUPS
     // =====================================
@@ -1750,11 +1627,14 @@ window.showMatchTab = function(tab) {
                 player.type === "coach"
             );
 
+            // Read the actual formation supplied by Goal API
             const formationParts = String(formation || "4-2-3-1")
                 .split("-")
                 .map(Number)
                 .filter(number => Number.isFinite(number) && number > 0);
 
+            // Position 1 is the goalkeeper.
+            // Remaining players are grouped by formation lines.
             const lines = [];
             let playerIndex = 1;
 
@@ -1763,6 +1643,7 @@ window.showMatchTab = function(tab) {
                 playerIndex += number;
             });
 
+            // Fallback if the formation and lineup counts differ
             if (
                 starters.length !== 11 ||
                 lines.reduce((total, line) => total + line.length, 0) !== 10
@@ -1793,17 +1674,13 @@ window.showMatchTab = function(tab) {
             }
 
             const renderPlayer = player => `
-                <div class="tactical-player"
-                     title="${escapeHTML(player.lineupPlayer || "Player")}">
-
+                <div class="tactical-player" title="${escapeHTML(player.lineupPlayer || "Player")}">
                     <span class="tactical-shirt">
                         ${escapeHTML(player.lineupNumber || "")}
                     </span>
-
                     <span class="tactical-player-name">
                         ${escapeHTML(player.lineupPlayer || "Player")}
                     </span>
-
                 </div>
             `;
 
@@ -1819,7 +1696,6 @@ window.showMatchTab = function(tab) {
                                 Formation: ${escapeHTML(formation || "N/A")}
                             </span>
                         </div>
-
                         <span class="tactical-player-count">
                             ${starters.length}/11 STARTING
                         </span>
@@ -1869,7 +1745,6 @@ window.showMatchTab = function(tab) {
                                                 <span class="tactical-sub-number">
                                                     ${escapeHTML(player.lineupNumber || "-")}
                                                 </span>
-
                                                 <span>
                                                     ${escapeHTML(player.lineupPlayer || "Player")}
                                                 </span>
@@ -1923,6 +1798,7 @@ window.showMatchTab = function(tab) {
         return;
     }
 
+
     // =====================================
     // STATISTICS DASHBOARD
     // =====================================
@@ -1933,145 +1809,474 @@ window.showMatchTab = function(tab) {
             ? match.statistics
             : [];
 
-        if (!statistics.length) {
+        const homeName = match.homeTeamName || "Home";
+        const awayName = match.awayTeamName || "Away";
+
+        // Safely convert statistic values into numbers for bar widths
+        const getNumericValue = value => {
+
+            if (value === null || value === undefined || value === "") {
+                return null;
+            }
+
+            const number = Number(
+                String(value).replace(/[%\s,]/g, "")
+            );
+
+            return Number.isFinite(number) ? number : null;
+        };
+
+        // Render one comparison row
+        const renderStatistic = stat => {
+
+            const label = stat.type ||
+                stat.name ||
+                stat.statistic ||
+                "Statistic";
+
+            const homeValue = stat.homeValue ??
+                stat.home ??
+                stat.homeTeamValue ??
+                "-";
+
+            const awayValue = stat.awayValue ??
+                stat.away ??
+                stat.awayTeamValue ??
+                "-";
+
+            const homeNumber = getNumericValue(homeValue);
+            const awayNumber = getNumericValue(awayValue);
+
+            const canCompare =
+                homeNumber !== null &&
+                awayNumber !== null;
+
+            const total = canCompare
+                ? Math.max(Math.abs(homeNumber), Math.abs(awayNumber), 1)
+                : 1;
+
+            const homeWidth = canCompare
+                ? Math.max(0, Math.min(100, (Math.abs(homeNumber) / total) * 100))
+                : 0;
+
+            const awayWidth = canCompare
+                ? Math.max(0, Math.min(100, (Math.abs(awayNumber) / total) * 100))
+                : 0;
+
+            return `
+                <div class="stat-comparison-row">
+
+                    <div class="stat-values">
+                        <strong class="home-stat-value">
+                            ${escapeHTML(homeValue)}
+                        </strong>
+
+                        <span class="stat-label">
+                            ${escapeHTML(label)}
+                        </span>
+
+                        <strong class="away-stat-value">
+                            ${escapeHTML(awayValue)}
+                        </strong>
+                    </div>
+
+                    <div class="stat-bars">
+
+                        <div class="stat-bar-track home-stat-track">
+                            <div
+                                class="stat-bar-fill home-stat-fill"
+                                style="width:${homeWidth}%">
+                            </div>
+                        </div>
+
+                        <div class="stat-bar-track away-stat-track">
+                            <div
+                                class="stat-bar-fill away-stat-fill"
+                                style="width:${awayWidth}%">
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+        };
+
+        if (statistics.length === 0) {
+
             content.innerHTML = `
                 <div class="empty-state">
                     <span>📊</span>
                     <h3>Statistics unavailable</h3>
-                    <p>Match statistics will appear here when available.</p>
+                    <p>
+                        Match statistics have not been provided
+                        by the data source for this fixture.
+                    </p>
+                </div>
+            `;
+
+            return;
+        }
+
+        content.innerHTML = `
+
+            <div class="match-info-panel stats-dashboard">
+
+                <div class="stats-heading">
+                    <div>
+                        <span class="stats-subtitle">
+                            MATCH ANALYSIS
+                        </span>
+                        <h3>📊 Match Statistics</h3>
+                    </div>
+                </div>
+
+                <div class="stats-team-heading">
+                    <span>${escapeHTML(homeName)}</span>
+                    <span>${escapeHTML(awayName)}</span>
+                </div>
+
+                <div class="stats-list">
+                    ${statistics.map(renderStatistic).join("")}
+                </div>
+
+                <div class="stats-legend">
+                    <span>
+                        <i class="home-legend"></i>
+                        ${escapeHTML(homeName)}
+                    </span>
+
+                    <span>
+                        <i class="away-legend"></i>
+                        ${escapeHTML(awayName)}
+                    </span>
+                </div>
+
+            </div>
+        `;
+    }
+};
+
+
+/* =========================================
+   LUX LIVE FOOTBALL
+   GOAL API — HIGHLIGHTS
+========================================= */
+
+
+window.highlightVideos = [];
+
+window.loadHighlights = async function () {
+    const grid = document.getElementById("highlightsGrid");
+    const count = document.getElementById("highlightsCount");
+
+    if (!grid) return;
+
+    grid.innerHTML = `
+        <div class="empty-state">
+            <span>⚽</span>
+            <h3>Loading highlights...</h3>
+        </div>
+    `;
+
+    const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+
+    try {
+        // FETCH BOTH VIDEO SOURCES
+        const [goalResult, manualResult] = await Promise.allSettled([
+            apiRequest("/api/goal/videos/recent"),
+            apiRequest("/api/manual-highlights")
+        ]);
+
+        // GOAL API VIDEOS
+        const goalVideos =
+            goalResult.status === "fulfilled" &&
+            Array.isArray(goalResult.value?.data)
+                ? goalResult.value.data
+                : [];
+
+        // MANUALLY ADDED ADMIN VIDEOS
+        const manualVideos =
+            manualResult.status === "fulfilled" &&
+            Array.isArray(manualResult.value?.data)
+                ? manualResult.value.data
+                : [];
+
+        // FORMAT MANUAL VIDEOS TO MATCH THE DISPLAY STRUCTURE
+        const formattedManualVideos = manualVideos.map(video => ({
+            source: "manual",
+            title: video.title,
+            url: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(video.youtube_video_id)}`,
+            fixture: {
+                homeTeamName: video.home_team || "Home Team",
+                awayTeamName: video.away_team || "Away Team",
+                league: {
+                    name: video.league || "Football"
+                },
+                homeTeamScore: null,
+                awayTeamScore: null
+            },
+            description: video.description || "",
+            matchDate: video.match_date || ""
+        }));
+
+        // VALIDATE GOAL API YOUTUBE VIDEOS
+        const validGoalVideos = goalVideos.filter(video => {
+            try {
+                const url = new URL(video.url);
+
+                return (
+                    ["www.youtube.com", "youtube.com", "youtube-nocookie.com"]
+                        .includes(url.hostname) &&
+                    url.pathname.startsWith("/embed/")
+                );
+            } catch {
+                return false;
+            }
+        }).map(video => ({
+            ...video,
+            source: "goal"
+        }));
+
+        // COMBINE BOTH SOURCES
+        window.highlightVideos = [
+            ...formattedManualVideos,
+            ...validGoalVideos
+        ];
+
+        if (count) {
+            count.textContent =
+                `${window.highlightVideos.length} videos`;
+        }
+
+        if (!window.highlightVideos.length) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <span>⚽</span>
+                    <h3>No highlights available</h3>
+                    <p>New football videos will appear here when available.</p>
                 </div>
             `;
             return;
         }
 
-        const homeStats = statistics.find(item =>
-            item.team === "home"
-        ) || {};
+        // DISPLAY VIDEO CARDS
+        grid.innerHTML = window.highlightVideos.map((video, index) => {
+            const fixture = video.fixture || {};
 
-        const awayStats = statistics.find(item =>
-            item.team === "away"
-        ) || {};
+            const home = fixture.homeTeamName || "Home Team";
+            const away = fixture.awayTeamName || "Away Team";
 
-        const getStat = (team, key) => {
-            const value = team[key];
+            const score =
+                fixture.homeTeamScore != null &&
+                fixture.awayTeamScore != null
+                    ? `${fixture.homeTeamScore} - ${fixture.awayTeamScore}`
+                    : "Match Highlights";
 
-            return value === undefined || value === null
-                ? 0
-                : value;
-        };
+            const league = fixture.league?.name || "Football";
 
-        const statList = [
-            { key: "shotsOnTarget", label: "Shots on Target" },
-            { key: "shotsOffTarget", label: "Shots off Target" },
-            { key: "totalShots", label: "Total Shots" },
-            { key: "blockedShots", label: "Blocked Shots" },
-            { key: "cornerKicks", label: "Corner Kicks" },
-            { key: "offsides", label: "Offsides" },
-            { key: "fouls", label: "Fouls" },
-            { key: "yellowCards", label: "Yellow Cards" },
-            { key: "redCards", label: "Red Cards" },
-            { key: "totalPasses", label: "Total Passes" },
-            { key: "accuratePasses", label: "Accurate Passes" },
-            { key: "ballPossession", label: "Possession" }
-        ];
+            const youtubeId = video.url.match(
+                /\/embed\/([a-zA-Z0-9_-]{11})/
+            )?.[1];
 
-        content.innerHTML = `
-            <div class="match-info-panel statistics-panel">
+            const thumbnail = youtubeId
+                ? `https://i.ytimg.com/vi/${encodeURIComponent(youtubeId)}/hqdefault.jpg`
+                : "";
 
-                <h3>📊 Match Statistics</h3>
+            return `
+                <article class="highlight-card"
+                         onclick="window.playHighlight(${index})">
 
-                <div class="statistics-team-headings">
-                    <strong>
-                        ${escapeHTML(match.homeTeamName || "Home")}
-                    </strong>
+                    <div class="highlight-image">
+                        ${thumbnail
+                            ? `<img src="${thumbnail}"
+                                    alt="${safe(home)} vs ${safe(away)}"
+                                    loading="lazy">`
+                            : `<span>▶</span>`
+                        }
+                        <span class="highlight-play">▶</span>
+                    </div>
 
-                    <strong>
-                        ${escapeHTML(match.awayTeamName || "Away")}
-                    </strong>
-                </div>
+                    <div class="highlight-card-content">
+                        <span class="highlight-league">${safe(league)}</span>
+                        <h3>${safe(video.title || `${home} vs ${away}`)}</h3>
+                        <p class="highlight-score">${safe(score)}</p>
+                        <span class="highlight-watch">▶ Watch Highlights</span>
+                    </div>
 
-                ${statList.map(stat => {
+                </article>
+            `;
+        }).join("");
 
-                    const homeValue = getStat(homeStats, stat.key);
-                    const awayValue = getStat(awayStats, stat.key);
+    } catch (error) {
+        console.error("Highlights loading error:", error);
 
-                    const homeNumber =
-                        parseFloat(String(homeValue).replace("%", "")) || 0;
-
-                    const awayNumber =
-                        parseFloat(String(awayValue).replace("%", "")) || 0;
-
-                    const total = homeNumber + awayNumber;
-
-                    const homeWidth = total > 0
-                        ? (awayNumber / total) * 100
-                        : 50;
-
-                    return `
-                        <div class="statistics-item">
-
-                            <div class="statistics-values">
-                                <strong>${escapeHTML(homeValue)}</strong>
-                                <span>${escapeHTML(stat.label)}</span>
-                                <strong>${escapeHTML(awayValue)}</strong>
-                            </div>
-
-                            <div class="statistics-bar">
-                                <span
-                                    class="statistics-home-bar"
-                                    style="width:${homeWidth}%">
-                                </span>
-
-                                <span
-                                    class="statistics-away-bar"
-                                    style="width:${awayWidth}%">
-                                </span>
-                            </div>
-
-                        </div>
-                    `;
-
-                }).join("")}
-
+        grid.innerHTML = `
+            <div class="empty-state">
+                <span>⚠️</span>
+                <h3>Highlights unavailable</h3>
+                <p>Please try again later.</p>
             </div>
         `;
 
-        return;
+        if (count) count.textContent = "Unavailable";
     }
-
-
-    // =====================================
-    // UNKNOWN TAB FALLBACK
-    // =====================================
-
-    content.innerHTML = `
-        <div class="empty-state">
-            <h3>Section unavailable</h3>
-            <p>Please select another match section.</p>
-        </div>
-    `;
-
 };
 
 
-// =========================================
-// MATCH DETAILS PAGE INITIALIZATION
-// =========================================
+/* =========================================
+   PLAY SELECTED HIGHLIGHT
+========================================= */
 
-document.addEventListener("DOMContentLoaded", function() {
+window.playHighlight = function (index) {
+    const video = window.highlightVideos[index];
 
-    const params = new URLSearchParams(window.location.search);
+    if (!video) return;
 
-    const page = params.get("page");
-    const fixtureId = params.get("id");
+    const player = document.getElementById("highlightPlayer");
+    const info = document.getElementById("highlightVideoInfo");
 
-    if (page === "match" && fixtureId) {
+    if (!player) return;
 
-        if (typeof window.loadMatchDetails === "function") {
-            window.loadMatchDetails(fixtureId);
-        }
+    const safe = value => String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
 
+    const fixture = video.fixture || {};
+    const home = fixture.homeTeamName || "Home Team";
+    const away = fixture.awayTeamName || "Away Team";
+
+    const embedURL = new URL(video.url);
+    embedURL.searchParams.set("autoplay", "1");
+    embedURL.searchParams.set("rel", "0");
+
+    player.innerHTML = `
+        <iframe
+            src="${safe(embedURL.href)}"
+            title="${safe(video.title || "Football Highlights")}"
+            allow="accelerometer; autoplay; clipboard-write;
+                   encrypted-media; gyroscope; picture-in-picture;
+                   web-share"
+            allowfullscreen
+            loading="lazy">
+        </iframe>
+    `;
+
+    if (info) {
+        info.hidden = false;
+        info.innerHTML = `
+            <h2>${safe(video.title || "Match Highlights")}</h2>
+            <h3>${safe(home)} vs ${safe(away)}</h3>
+            <p>${safe(fixture.league?.name || "Football")}</p>
+        `;
     }
 
-});
-                   
+    player.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+};
+
+
+/* LUX MY ACCOUNT */
+window.openMyAccount=function(){
+    if(!sessionStorage.getItem("lux_user_token")){document.getElementById("loginModal")?.classList.add("show");return;}
+    document.querySelectorAll("[data-page-section]").forEach(p=>p.hidden=true);
+    const page=document.getElementById("accountPage");if(page)page.hidden=false;
+    history.pushState({page:"account"},"","?page=account");
+    window.initializeAccountDashboard();window.scrollTo({top:0,behavior:"smooth"});
+};
+window.initializeAccountDashboard=function(){
+    const email=document.getElementById("accountEmail");if(email)email.textContent=sessionStorage.getItem("lux_user_email")||"LUX Member";
+    const role=document.getElementById("accountRole");if(role)role.textContent=sessionStorage.getItem("lux_user_role")==="admin"?"Administrator":"LUX Member";
+    const read=k=>{try{return JSON.parse(localStorage.getItem(k)||"[]");}catch(_){return[];}};
+    const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+    function render(id,key){const el=document.getElementById(id);if(!el)return;const values=read(key);el.innerHTML=values.length?values.map((v,i)=>`<div class="account-saved-item"><span>${escapeHTML(v)}</span><button type="button" data-key="${key}" data-index="${i}">×</button></div>`).join(""):"<p class='account-note'>Nothing saved yet.</p>";el.querySelectorAll("[data-key]").forEach(btn=>btn.addEventListener("click",()=>{const arr=read(key);arr.splice(+btn.dataset.index,1);write(key,arr);render(id,key);}));}
+    render("favoriteTeamsList","lux_favorite_teams");render("favoriteLeaguesList","lux_favorite_leagues");
+    const saved=read("lux_saved_matches"), savedEl=document.getElementById("savedMatchesList");if(savedEl)savedEl.innerHTML=saved.length?saved.map(v=>`<div class="account-saved-item">${escapeHTML(v.label)}</div>`).join(""):"No saved matches on this device.";
+    const teamBtn=document.getElementById("addFavoriteTeam");if(teamBtn&&!teamBtn.dataset.bound){teamBtn.dataset.bound="1";teamBtn.addEventListener("click",()=>{const input=document.getElementById("favoriteTeamInput"),v=input.value.trim();if(!v)return;const a=read("lux_favorite_teams");if(!a.some(x=>x.toLowerCase()===v.toLowerCase()))a.push(v);write("lux_favorite_teams",a);input.value="";render("favoriteTeamsList","lux_favorite_teams");});}
+    const leagueBtn=document.getElementById("addFavoriteLeague");if(leagueBtn&&!leagueBtn.dataset.bound){leagueBtn.dataset.bound="1";leagueBtn.addEventListener("click",()=>{const s=document.getElementById("favoriteLeagueSelect"),v=s.value;if(!v)return;const a=read("lux_favorite_leagues");if(!a.includes(v))a.push(v);write("lux_favorite_leagues",a);s.value="";render("favoriteLeaguesList","lux_favorite_leagues");});}
+    const notify=document.getElementById("enableNotifications");if(notify&&!notify.dataset.bound){notify.dataset.bound="1";notify.addEventListener("click",async()=>{const el=document.getElementById("notificationStatus");if(!("Notification"in window)){el.textContent="This browser does not support notifications.";return;}const p=await Notification.requestPermission();el.textContent=p==="granted"?"Notifications enabled in this browser.":`Permission: ${p}`;});}
+    const out=document.getElementById("accountSignOut");if(out&&!out.dataset.bound){out.dataset.bound="1";out.addEventListener("click",()=>{["lux_user_token","lux_user_email","lux_user_role","lux_admin_token"].forEach(k=>sessionStorage.removeItem(k));location.replace("/");});}
+};
+window.saveLuxMatch=function(id,label){const a=JSON.parse(localStorage.getItem("lux_saved_matches")||"[]");if(!a.some(x=>String(x.id)===String(id)))a.push({id:String(id),label:String(label||"Saved match")});localStorage.setItem("lux_saved_matches",JSON.stringify(a));};
+
+/* =========================================
+   LUX MEMBERS-ONLY SESSION GUARD
+========================================= */
+
+(async function luxSessionGuard() {
+    document.body.classList.add("lux-auth-locked");
+
+    const modal = document.getElementById("loginModal");
+
+    if (modal) {
+        modal.classList.add("show");
+    }
+
+    window.luxAuthMode = "login";
+
+    const token = sessionStorage.getItem("lux_user_token");
+
+    if (!token) {
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/auth/me", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error("Session expired.");
+        }
+
+        if (result.role === "admin") {
+            sessionStorage.setItem("lux_user_role", "admin");
+            sessionStorage.setItem("lux_admin_token", token);
+            window.location.replace("/admin.html");
+            return;
+        }
+
+        sessionStorage.setItem("lux_user_role", "user");
+        sessionStorage.setItem("lux_user_email", result.user.email);
+
+        document.body.classList.remove("lux-auth-locked");
+        loadLiveMatches();
+        loadFixtures();
+        if (typeof window.loadLiveStreams === "function") window.loadLiveStreams();
+
+        if (modal) {
+            modal.classList.remove("show");
+        }
+
+        const loginButton = document.querySelector(".login-btn");
+
+        if (loginButton) {
+            loginButton.textContent = "My Account";
+            loginButton.onclick = window.openMyAccount;
+        }
+
+    } catch (error) {
+        sessionStorage.removeItem("lux_user_token");
+        sessionStorage.removeItem("lux_user_email");
+        sessionStorage.removeItem("lux_user_role");
+        sessionStorage.removeItem("lux_admin_token");
+
+        console.log("LUX session:", error.message);
+    }
+})();

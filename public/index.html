@@ -6,9 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#07111f">
     <meta name="description" content="LUX LIVE FOOTBALL - Your home for live football, fixtures, results and highlights.">
+
     <title>LUX LIVE FOOTBALL</title>
 
     <link rel="stylesheet" href="/styles.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -47,33 +49,27 @@
 
 <body>
 
-<!-- HEADER -->
+<!-- HEADER / DASHBOARD NAVIGATION -->
 <header class="header">
-
-    <!-- LEAGUES BUTTON: REPLACES MY ACCOUNT -->
-    <button class="login-btn" id="leaguesButton" type="button"
-            onclick="window.openLuxPage && window.openLuxPage('leagues')">
+    <button class="login-btn" id="leaguesButton" type="button" onclick="window.openLuxPage && window.openLuxPage('leagues')">
         Leagues
     </button>
 
-    <!-- LUX LIVE REMAINS IN THE CENTRE -->
     <div class="logo">
         <span class="logo-icon">⚽</span>
         <span>LUX <strong>LIVE</strong></span>
     </div>
 
-    <!-- DASHBOARD REMAINS IN ITS ORIGINAL POSITION -->
     <button class="dashboard-toggle" id="dashboardToggle"
             aria-label="Open dashboard" aria-expanded="false">
         ☰ <span>Dashboard</span>
     </button>
-
 </header>
 
 <!-- DASHBOARD OVERLAY -->
 <div class="dashboard-overlay" id="dashboardOverlay"></div>
 
-<!-- DASHBOARD PANEL -->
+<!-- SLIDE-OUT DASHBOARD -->
 <aside class="dashboard-panel" id="dashboardPanel">
 
     <div class="dashboard-header">
@@ -103,12 +99,7 @@
         </a>
 
         <a href="?page=leagues" data-page-link="leagues">
-            <span>🏆</span>
-            <div>
-                <strong>Leagues</strong>
-                <small>Explore competitions and teams</small>
-            </div>
-            <b>›</b>
+            <span>🏆</span><div><strong>Leagues</strong><small>Explore competitions and teams</small></div><b>›</b>
         </a>
 
         <a href="?page=live" data-page-link="live">
@@ -139,12 +130,7 @@
         </a>
 
         <a href="?page=account" data-page-link="account">
-            <span>👤</span>
-            <div>
-                <strong>My Account</strong>
-                <small>Profile and preferences</small>
-            </div>
-            <b>›</b>
+            <span>👤</span><div><strong>My Account</strong><small>Profile and preferences</small></div><b>›</b>
         </a>
 
     </nav>
@@ -161,86 +147,38 @@
     <!-- HOME PAGE -->
     <div id="homePage" data-page-section="home">
 
-        <!-- SEARCH -->
-        <section class="home-search-section" aria-label="Search football">
-            <div class="home-search">
-                <input type="search" id="homeSearchInput"
-                       placeholder="Search teams, leagues or matches..."
-                       autocomplete="off">
-                <button type="button" id="homeSearchButton">Search</button>
-            </div>
-            <div id="homeSearchResults"
-                 class="home-search-results"
-                 hidden aria-live="polite"></div>
+<div class="home-search">
+    <input type="search" id="homeSearchInput"
+           placeholder="Search teams, leagues or matches...">
+    <button type="button" id="homeSearchButton">Search</button>
+    <div id="homeSearchResults" class="home-search-results" hidden aria-live="polite"></div>
+</div>
+
+<section class="home-streams-section" id="homeStreams">
+    <div class="section-heading">
+        <div><span class="section-subtitle">YOUR LIVE ENTERTAINMENT</span><h2>WATCH LIVE</h2>
+        <p>Choose a channel or football broadcast without leaving the homepage.</p></div>
+        <span class="live-indicator"><span class="live-dot"></span> LIVE</span>
+    </div>
+    <div class="home-stream-player video-container" id="liveStreamPlayer">
+        <div class="video-placeholder"><div class="play-icon">▶</div><p>Select a channel from LIVE TV or LIVE FOOTBALL.</p></div>
+    </div>
+    <div class="stream-categories-grid">
+        <section class="stream-category-panel" aria-labelledby="liveTvHeading">
+            <div class="stream-category-heading"><span class="stream-category-icon">📺</span><div><h3 id="liveTvHeading">LIVE TV</h3><p>General television channels</p></div></div>
+            <div id="liveTvList" class="live-stream-list"><p>Loading TV channels...</p></div>
         </section>
-
-        <!-- SHARED LIVE PLAYER -->
-        <section class="home-streams-section" id="homeStreams">
-
-            <div class="section-heading">
-                <div>
-                    <span class="section-subtitle">YOUR LIVE ENTERTAINMENT</span>
-                    <h2>WATCH LIVE</h2>
-                    <p>Choose a channel or football broadcast without leaving the homepage.</p>
-                </div>
-
-                <span class="live-indicator">
-                    <span class="live-dot"></span> LIVE
-                </span>
-            </div>
-
-            <div class="home-stream-player video-container" id="liveStreamPlayer">
-                <div class="video-placeholder">
-                    <div class="play-icon">▶</div>
-                    <p>Select a channel from LIVE TV or LIVE FOOTBALL.</p>
-                </div>
-            </div>
-
-            <div class="stream-categories-grid">
-
-                <!-- LIVE TV -->
-                <section class="stream-category-panel"
-                         aria-labelledby="liveTvHeading">
-
-                    <div class="stream-category-heading">
-                        <span class="stream-category-icon">📺</span>
-                        <div>
-                            <h3 id="liveTvHeading">LIVE TV</h3>
-                            <p>General television channels</p>
-                        </div>
-                    </div>
-
-                    <div id="liveTvList" class="live-stream-list">
-                        <p>Loading TV channels...</p>
-                    </div>
-
-                </section>
-
-                <!-- LIVE FOOTBALL -->
-                <section class="stream-category-panel"
-                         aria-labelledby="liveFootballHeading">
-
-                    <div class="stream-category-heading">
-                        <span class="stream-category-icon">⚽</span>
-                        <div>
-                            <h3 id="liveFootballHeading">LIVE FOOTBALL</h3>
-                            <p>Football matches and broadcasts</p>
-                        </div>
-                    </div>
-
-                    <div id="liveFootballList" class="live-stream-list">
-                        <p>Loading football broadcasts...</p>
-                    </div>
-
-                </section>
-
-            </div>
+        <section class="stream-category-panel" aria-labelledby="liveFootballHeading">
+            <div class="stream-category-heading"><span class="stream-category-icon">⚽</span><div><h3 id="liveFootballHeading">LIVE FOOTBALL</h3><p>Football matches and broadcasts</p></div></div>
+            <div id="liveFootballList" class="live-stream-list"><p>Loading football broadcasts...</p></div>
         </section>
+    </div>
+</section>
 
-        <!-- HERO -->
         <section class="hero">
 
             <div class="hero-content">
+
                 <span class="hero-label">THE HOME OF FOOTBALL</span>
 
                 <h1>
@@ -253,6 +191,7 @@
                     Follow live matches, fixtures, results and highlights
                     all in one place.
                 </p>
+
             </div>
 
             <div class="hero-visual">
@@ -262,9 +201,10 @@
 
         </section>
 
-        <!-- ABOUT -->
+
         <section class="about-section">
             <h2>MORE THAN JUST FOOTBALL.</h2>
+
             <p>
                 LUX LIVE FOOTBALL brings football fans closer to the game
                 through match information, fixtures, results and authorised
@@ -274,77 +214,70 @@
 
     </div>
 
-
-    <!-- DEDICATED LEAGUES PAGE -->
-    <section id="leaguesPage"
-             class="leagues-page"
-             data-page-section="leagues"
-             hidden>
-
+    <!-- LEAGUES PAGE -->
+    <section id="leaguesPage" class="leagues-page" data-page-section="leagues" hidden>
         <div class="page-heading">
             <span class="section-subtitle">FOLLOW YOUR FAVOURITES</span>
             <h1>LEAGUES</h1>
             <p>Explore competitions and discover their participating clubs and teams.</p>
         </div>
-
         <section class="leagues-section" id="popularLeagues">
 
-            <div class="section-heading">
-                <div>
-                    <span class="section-subtitle">FOLLOW YOUR FAVOURITES</span>
-                    <h2>Popular Leagues</h2>
-                </div>
-            </div>
+    <div class="section-heading">
+        <div>
+            <span class="section-subtitle">FOLLOW YOUR FAVOURITES</span>
+            <h2>Popular Leagues</h2>
+        </div>
+    </div>
 
-            <div class="leagues-grid">
+    <div class="leagues-grid">
 
-                <div class="league-card" onclick="openLeague('premier-league')">
-                    <span>🏆</span>
-                    <h3>Premier League</h3>
-                    <p>England</p>
-                    <small>Explore Clubs →</small>
-                </div>
+        <div class="league-card" onclick="openLeague('premier-league')">
+            <span>🏆</span>
+            <h3>Premier League</h3>
+            <p>England</p>
+            <small>Explore Clubs →</small>
+        </div>
 
-                <div class="league-card" onclick="openLeague('la-liga')">
-                    <span>🏆</span>
-                    <h3>La Liga</h3>
-                    <p>Spain</p>
-                    <small>Explore Clubs →</small>
-                </div>
+        <div class="league-card" onclick="openLeague('la-liga')">
+            <span>🏆</span>
+            <h3>La Liga</h3>
+            <p>Spain</p>
+            <small>Explore Clubs →</small>
+        </div>
 
-                <div class="league-card" onclick="openLeague('serie-a')">
-                    <span>🏆</span>
-                    <h3>Serie A</h3>
-                    <p>Italy</p>
-                    <small>Explore Clubs →</small>
-                </div>
+        <div class="league-card" onclick="openLeague('serie-a')">
+            <span>🏆</span>
+            <h3>Serie A</h3>
+            <p>Italy</p>
+            <small>Explore Clubs →</small>
+        </div>
 
-                <div class="league-card" onclick="openLeague('bundesliga')">
-                    <span>🏆</span>
-                    <h3>Bundesliga</h3>
-                    <p>Germany</p>
-                    <small>Explore Clubs →</small>
-                </div>
+        <div class="league-card" onclick="openLeague('bundesliga')">
+            <span>🏆</span>
+            <h3>Bundesliga</h3>
+            <p>Germany</p>
+            <small>Explore Clubs →</small>
+        </div>
 
-                <div class="league-card" onclick="openLeague('champions-league')">
-                    <span>🏆</span>
-                    <h3>Champions League</h3>
-                    <p>Europe</p>
-                    <small>Explore Clubs →</small>
-                </div>
+        <div class="league-card" onclick="openLeague('champions-league')">
+            <span>🏆</span>
+            <h3>Champions League</h3>
+            <p>Europe</p>
+            <small>Explore Clubs →</small>
+        </div>
 
-                <div class="league-card" onclick="openLeague('afcon')">
-                    <span>🌍</span>
-                    <h3>AFCON</h3>
-                    <p>Africa</p>
-                    <small>Explore Teams →</small>
-                </div>
+        <div class="league-card" onclick="openLeague('afcon')">
+            <span>🌍</span>
+            <h3>AFCON</h3>
+            <p>Africa</p>
+            <small>Explore Teams →</small>
+        </div>
 
-            </div>
-        </section>
+    </div>
 
+</section>
     </section>
-
 
     <!-- LEAGUE DETAILS PAGE -->
     <section id="leagueDetailsPage"
@@ -352,11 +285,12 @@
              hidden>
 
         <button onclick="closeLeague()" class="back-button">
-            ← Back to Leagues
+            ← Back to Home
         </button>
 
         <div class="league-details-heading">
             <span id="leagueIcon">🏆</span>
+
             <div>
                 <h2 id="leagueTitle">League</h2>
                 <p id="leagueCountry">Teams</p>
@@ -364,61 +298,65 @@
         </div>
 
         <h3>Participating Teams</h3>
+
         <div id="leagueTeams" class="league-teams-grid"></div>
 
     </section>
 
 
-    <!-- TEAM PROFILE PAGE -->
-    <section id="teamProfilePage"
-             class="team-profile-page"
-             hidden>
+<!-- INDIVIDUAL TEAM PROFILE PAGE -->
+<section id="teamProfilePage" class="team-profile-page" hidden>
 
-        <button onclick="closeTeam()" class="back-button">
-            ← Back to League
-        </button>
+    <button onclick="closeTeam()" class="back-button">
+        ← Back to League
+    </button>
 
-        <div class="team-profile-header">
-            <div class="team-profile-logo" id="teamProfileLogo">⚽</div>
-            <div>
-                <h1 id="teamProfileName">Team Name</h1>
-                <p id="teamProfileLeague">League · Country</p>
-            </div>
+    <div class="team-profile-header">
+        <div class="team-profile-logo" id="teamProfileLogo">
+            ⚽
         </div>
 
-        <div class="team-profile-content">
+        <div>
+            <h1 id="teamProfileName">Team Name</h1>
+            <p id="teamProfileLeague">League · Country</p>
+        </div>
+    </div>
 
-            <h2>Club Overview</h2>
-            <p id="teamProfileDescription">
-                Welcome to the club profile.
-            </p>
+    <div class="team-profile-content">
 
-            <div class="team-profile-grid">
+        <h2>Club Overview</h2>
+        <p id="teamProfileDescription">
+            Welcome to the club profile.
+        </p>
 
-                <div class="team-info-card">
-                    <span>🏆</span>
-                    <h3>Competition</h3>
-                    <p id="teamProfileCompetition">League</p>
-                </div>
+        <div class="team-profile-grid">
 
-                <div class="team-info-card">
-                    <span>🌍</span>
-                    <h3>Country</h3>
-                    <p id="teamProfileCountry">Country</p>
-                </div>
-
-            </div>
-
-            <h2>Team Information</h2>
             <div class="team-info-card">
-                <p>Squad, players, stadium, fixtures and results will appear here as we connect football data.</p>
+                <span>🏆</span>
+                <h3>Competition</h3>
+                <p id="teamProfileCompetition">League</p>
+            </div>
+
+            <div class="team-info-card">
+                <span>🌍</span>
+                <h3>Country</h3>
+                <p id="teamProfileCountry">Country</p>
             </div>
 
         </div>
-    </section>
+
+        <h2>Team Information</h2>
+        <div class="team-info-card">
+            <p>Squad, players, stadium, fixtures and results will appear here as we connect football data.</p>
+        </div>
+
+    </div>
+
+</section>
 
 
-    <!-- LIVE MATCHES PAGE -->
+
+    <!-- LIVE PAGE -->
     <div id="livePage" data-page-section="live" hidden>
 
         <div class="page-heading">
@@ -431,12 +369,15 @@
 
             <div class="section-heading">
                 <h2>Now Playing</h2>
+
                 <span class="live-indicator">
-                    <span class="live-dot"></span> LIVE
+                    <span class="live-dot"></span>
+                    LIVE
                 </span>
             </div>
 
             <div id="liveMatches" class="matches-grid">
+
                 <div class="empty-state">
                     <span>⚽</span>
                     <h3>No live matches available</h3>
@@ -445,9 +386,14 @@
                         to a match-data provider.
                     </p>
                 </div>
+
             </div>
 
         </section>
+     
+
+
+
 
         <section class="section">
             <a href="?page=home" class="back-home">← Back to Home</a>
@@ -458,84 +404,19 @@
 
     <!-- MY ACCOUNT PAGE -->
     <div id="accountPage" data-page-section="account" hidden>
-
-        <div class="page-heading">
-            <span class="section-subtitle">YOUR LUX PROFILE</span>
-            <h1>MY ACCOUNT</h1>
-            <p>Manage your profile, favourites and account security.</p>
+      <div class="page-heading"><span class="section-subtitle">YOUR LUX PROFILE</span><h1>MY ACCOUNT</h1><p>Manage your profile, favourites and account security.</p></div>
+      <section class="account-dashboard section">
+        <div class="account-profile-card"><div class="account-avatar">👤</div><div><span class="section-subtitle">SIGNED IN AS</span><h2 id="accountEmail">Loading account...</h2><p id="accountRole">LUX Member</p></div></div>
+        <div class="account-grid">
+          <article class="account-panel"><h3>⭐ Favourite Teams</h3><p>Add clubs you want to follow. Saved on this device.</p><div class="account-inline-form"><input id="favoriteTeamInput" maxlength="60" placeholder="Enter a team name"><button id="addFavoriteTeam" type="button">Add Team</button></div><div id="favoriteTeamsList" class="account-saved-list"></div></article>
+          <article class="account-panel"><h3>🏆 Favourite Leagues</h3><p>Keep your preferred competitions close.</p><div class="account-inline-form"><select id="favoriteLeagueSelect"><option value="">Choose a league</option><option>Premier League</option><option>La Liga</option><option>Serie A</option><option>Bundesliga</option><option>Champions League</option><option>AFCON</option></select><button id="addFavoriteLeague" type="button">Add League</button></div><div id="favoriteLeaguesList" class="account-saved-list"></div></article>
+          <article class="account-panel"><h3>🔔 Notifications</h3><p>Allow browser notifications where supported.</p><button id="enableNotifications" type="button">Enable Notifications</button><p id="notificationStatus" class="account-note">Permission has not been requested.</p></article>
+          <article class="account-panel"><h3>🔐 Password & Security</h3><p>Update your password through secure account recovery.</p><a class="account-action-link" href="/reset-password.html">Manage Password</a></article>
+          <article class="account-panel"><h3>📌 Saved Matches</h3><p>Saved matches on this device.</p><div id="savedMatchesList" class="account-saved-list">No saved matches.</div></article>
+          <article class="account-panel account-signout-panel"><h3>Sign out</h3><p>End your LUX session on this browser.</p><button id="accountSignOut" class="account-danger-button" type="button">Sign Out</button></article>
         </div>
-
-        <section class="account-dashboard section">
-
-            <div class="account-profile-card">
-                <div class="account-avatar">👤</div>
-                <div>
-                    <span class="section-subtitle">SIGNED IN AS</span>
-                    <h2 id="accountEmail">Loading account...</h2>
-                    <p id="accountRole">LUX Member</p>
-                </div>
-            </div>
-
-            <div class="account-grid">
-
-                <article class="account-panel">
-                    <h3>⭐ Favourite Teams</h3>
-                    <p>Add clubs you want to follow. Saved on this device.</p>
-                    <div class="account-inline-form">
-                        <input id="favoriteTeamInput" maxlength="60"
-                               placeholder="Enter a team name">
-                        <button id="addFavoriteTeam" type="button">Add Team</button>
-                    </div>
-                    <div id="favoriteTeamsList" class="account-saved-list"></div>
-                </article>
-
-                <article class="account-panel">
-                    <h3>🏆 Favourite Leagues</h3>
-                    <p>Keep your preferred competitions close.</p>
-                    <div class="account-inline-form">
-                        <select id="favoriteLeagueSelect">
-                            <option value="">Choose a league</option>
-                            <option>Premier League</option>
-                            <option>La Liga</option>
-                            <option>Serie A</option>
-                            <option>Bundesliga</option>
-                            <option>Champions League</option>
-                            <option>AFCON</option>
-                        </select>
-                        <button id="addFavoriteLeague" type="button">Add League</button>
-                    </div>
-                    <div id="favoriteLeaguesList" class="account-saved-list"></div>
-                </article>
-
-                <article class="account-panel">
-                    <h3>🔔 Notifications</h3>
-                    <p>Allow browser notifications where supported.</p>
-                    <button id="enableNotifications" type="button">Enable Notifications</button>
-                    <p id="notificationStatus" class="account-note">Permission has not been requested.</p>
-                </article>
-
-                <article class="account-panel">
-                    <h3>🔐 Password & Security</h3>
-                    <p>Update your password through secure account recovery.</p>
-                    <a class="account-action-link" href="/reset-password.html">Manage Password</a>
-                </article>
-
-                <article class="account-panel">
-                    <h3>📌 Saved Matches</h3>
-                    <p>Saved matches on this device.</p>
-                    <div id="savedMatchesList" class="account-saved-list">No saved matches.</div>
-                </article>
-
-                <article class="account-panel account-signout-panel">
-                    <h3>Sign out</h3>
-                    <p>End your LUX session on this browser.</p>
-                    <button id="accountSignOut" class="account-danger-button" type="button">Sign Out</button>
-                </article>
-
-            </div>
-        </section>
+      </section>
     </div>
-
 
     <!-- FIXTURES PAGE -->
     <div id="fixturesPage" data-page-section="fixtures" hidden>
@@ -547,17 +428,24 @@
         </div>
 
         <section class="section">
+
             <div class="section-heading">
                 <h2>Upcoming Matches</h2>
             </div>
 
             <div id="fixtures" class="fixtures-container">
+
                 <div class="empty-state">
                     <span>📅</span>
                     <h3>Fixtures coming soon</h3>
-                    <p>Upcoming matches will appear here once match data is connected.</p>
+                    <p>
+                        Upcoming matches will appear here once match data
+                        is connected.
+                    </p>
                 </div>
+
             </div>
+
         </section>
 
         <section class="section">
@@ -567,79 +455,88 @@
     </div>
 
 
-    <!-- MATCH DETAILS PAGE -->
-    <div id="matchPage" data-page-section="match" hidden>
+<!-- MATCH DETAILS PAGE -->
+<div id="matchPage" data-page-section="match" hidden>
 
-        <div class="page-heading">
-            <span class="section-subtitle">LUX MATCH CENTRE</span>
-            <h1>MATCH DETAILS</h1>
-            <p>Everything happening in the match.</p>
+    <div class="page-heading">
+        <span class="section-subtitle">LUX MATCH CENTRE</span>
+        <h1>MATCH DETAILS</h1>
+        <p>Everything happening in the match.</p>
 
-            <button class="back-button"
-                    onclick="window.location.href='?page=fixtures'">
-                ← Back to Fixtures
-            </button>
-        </div>
-
-        <section class="section">
-            <div id="matchDetailsContent">
-                <div class="empty-state">
-                    <span>⚽</span>
-                    <h3>Loading match details...</h3>
-                    <p>Please wait while we retrieve match information.</p>
-                </div>
-            </div>
-        </section>
-
+        <button class="back-button"
+                onclick="window.location.href='?page=fixtures'">
+            ← Back to Fixtures
+        </button>
     </div>
 
+    <section class="section">
 
-    <!-- HIGHLIGHTS PAGE -->
-    <div id="highlightsPage" data-page-section="highlights" hidden>
+        <div id="matchDetailsContent">
 
-        <div class="page-heading">
-            <span class="section-subtitle">RELIVE THE MOMENTS</span>
-            <h1>FOOTBALL HIGHLIGHTS</h1>
-            <p>Watch real match highlights from the Goal API.</p>
+            <div class="empty-state">
+                <span>⚽</span>
+                <h3>Loading match details...</h3>
+                <p>Please wait while we retrieve match information.</p>
+            </div>
+
         </div>
 
-        <section class="section">
+    </section>
 
-            <div class="section-heading">
-                <h2>Latest Highlights</h2>
-                <span id="highlightsCount">Loading...</span>
-            </div>
+</div>
 
-            <div id="highlightPlayer" class="highlight-player">
-                <div class="highlight-player-placeholder">
-                    <span>▶</span>
-                    <h3>Select a highlight to watch</h3>
-                    <p>Choose a video from the latest highlights below.</p>
-                </div>
-            </div>
 
-            <div id="highlightVideoInfo" class="highlight-video-info" hidden></div>
+<!-- HIGHLIGHTS PAGE -->
+<div id="highlightsPage" data-page-section="highlights" hidden>
 
-            <div id="highlightsGrid" class="highlights-grid">
-                <div class="empty-state">
-                    <span>⚽</span>
-                    <h3>Loading highlights...</h3>
-                    <p>Please wait while we retrieve videos.</p>
-                </div>
-            </div>
-
-            <p class="player-note">
-                Videos are provided by their respective video sources.
-            </p>
-
-        </section>
-
-        <section class="section">
-            <a href="?page=home" class="back-home">← Back to Home</a>
-        </section>
-
+    <div class="page-heading">
+        <span class="section-subtitle">RELIVE THE MOMENTS</span>
+        <h1>FOOTBALL HIGHLIGHTS</h1>
+        <p>Watch real match highlights from the Goal API.</p>
     </div>
 
+    <section class="section">
+
+        <div class="section-heading">
+            <h2>Latest Highlights</h2>
+            <span id="highlightsCount">Loading...</span>
+        </div>
+
+        <!-- VIDEO PLAYER -->
+        <div id="highlightPlayer" class="highlight-player">
+            <div class="highlight-player-placeholder">
+                <span>▶</span>
+                <h3>Select a highlight to watch</h3>
+                <p>Choose a video from the latest highlights below.</p>
+            </div>
+        </div>
+
+        <!-- VIDEO INFORMATION -->
+        <div id="highlightVideoInfo" class="highlight-video-info" hidden></div>
+
+        <!-- HIGHLIGHT VIDEOS -->
+        <div id="highlightsGrid" class="highlights-grid">
+
+            <div class="empty-state">
+                <span>⚽</span>
+                <h3>Loading highlights...</h3>
+                <p>Please wait while we retrieve videos.</p>
+            </div>
+
+        </div>
+
+        <p class="player-note">
+            Videos are provided by their respective video sources.
+        </p>
+
+    </section>
+
+    <section class="section">
+        <a href="?page=home" class="back-home">← Back to Home</a>
+    </section>
+
+</div>
+   
 </main>
 
 
@@ -658,7 +555,6 @@
         <a href="?page=live">Live Matches</a>
         <a href="?page=fixtures">Fixtures</a>
         <a href="?page=highlights">Highlights</a>
-        <a href="?page=account">My Account</a>
     </div>
 
     <p class="copyright">
@@ -668,9 +564,9 @@
 </footer>
 
 
-<!-- LOGIN MODAL -->
-<div class="modal" id="loginModal">
 
+<!-- LUX ACCOUNT MODAL -->
+<div class="modal" id="loginModal">
     <div class="modal-content">
 
         <button class="close-modal" onclick="closeLogin()">×</button>
@@ -681,30 +577,36 @@
             Sign in to your LUX football account.
         </p>
 
-        <input type="email"
-               placeholder="Email address"
-               id="loginEmail"
-               autocomplete="email">
+        <input
+            type="email"
+            placeholder="Email address"
+            id="loginEmail"
+            autocomplete="email"
+        >
 
-        <input type="password"
-               placeholder="Password"
-               id="loginPassword"
-               autocomplete="current-password">
+        <input
+            type="password"
+            placeholder="Password"
+            id="loginPassword"
+            autocomplete="current-password"
+        >
 
-        <button class="primary-btn full-btn"
-                id="authSubmitButton"
-                onclick="login()">
-             Sign In
+        <button
+            class="primary-btn full-btn"
+            id="authSubmitButton"
+            onclick="login()">
+            Sign In
         </button>
 
         <p id="loginMessage"></p>
 
         <p style="text-align:center;margin-top:15px;">
             <span id="authSwitchText">Don't have an account?</span>
-            <button type="button"
-                    onclick="switchAuthMode()"
-                    id="authSwitchButton"
-                    style="background:none;border:0;color:#b8ff35;font-weight:bold;cursor:pointer;">
+            <button
+                type="button"
+                onclick="switchAuthMode()"
+                id="authSwitchButton"
+                style="background:none;border:0;color:#b8ff35;font-weight:bold;cursor:pointer;">
                 Create Account
             </button>
         </p>
@@ -713,24 +615,16 @@
 </div>
 
 
-<!-- MAIN APPLICATION JAVASCRIPT -->
+<!-- EXISTING APP FUNCTIONS -->
 <script src="/app.js"></script>
 
 
-<!-- PAGE NAVIGATION -->
+<!-- PAGE NAVIGATION SYSTEM -->
 <script>
 (function () {
     "use strict";
 
-    const pages = [
-        "home",
-        "leagues",
-        "live",
-        "fixtures",
-        "highlights",
-        "match",
-        "account"
-    ];
+    const pages = ["home", "leagues", "live", "fixtures", "highlights", "match", "account"];
 
     const dashboardToggle = document.getElementById("dashboardToggle");
     const dashboardPanel = document.getElementById("dashboardPanel");
@@ -745,28 +639,20 @@
         if (teamPage) teamPage.hidden = true;
     }
 
-    function closeDashboard() {
-        if (dashboardPanel) dashboardPanel.classList.remove("open");
-        if (dashboardOverlay) dashboardOverlay.classList.remove("open");
-
-        document.body.classList.remove("dashboard-open");
-
-        if (dashboardToggle) {
-            dashboardToggle.setAttribute("aria-expanded", "false");
-        }
-    }
-
     function openPage(page, updateHistory = true) {
         if (!pages.includes(page)) {
             page = "home";
         }
 
+        // Hide league and team profile pages
         closeExtraPages();
 
+        // Hide all normal pages
         document.querySelectorAll("[data-page-section]").forEach(section => {
             section.hidden = true;
         });
 
+        // Show selected page
         const selectedPage = document.querySelector(
             `[data-page-section="${page}"]`
         );
@@ -775,31 +661,24 @@
             selectedPage.hidden = false;
         }
 
-        if (page === "match") {
-            const fixtureId =
-                new URLSearchParams(window.location.search).get("id");
+// Load selected match details
+if (page === "match") {
+    const fixtureId =
+        new URLSearchParams(window.location.search).get("id");
 
-            if (fixtureId && typeof window.loadMatchDetails === "function") {
+    if (fixtureId && typeof window.loadMatchDetails === "function") {
+        window.loadMatchDetails(fixtureId);
+    }
+}
 
-window.loadMatchDetails(fixtureId);
-            }
-        }
+if (page === "highlights") {
+    if (typeof window.loadHighlights === "function") window.loadHighlights();
+}
+if (page === "account" && typeof window.initializeAccountDashboard === "function") {
+    window.initializeAccountDashboard();
+}
 
-        if (page === "highlights") {
-            if (typeof window.loadHighlights === "function") {
-                window.loadHighlights();
-            }
-        }
-
-        if (page === "account" &&
-            typeof window.initializeAccountDashboard === "function") {
-            window.initializeAccountDashboard();
-        }
-
-        if (page === "home" || page === "leagues") {
-            // No extra page loading required here.
-        }
-
+        // Update active dashboard navigation link
         document.querySelectorAll("[data-page-link]").forEach(link => {
             const active = link.dataset.pageLink === page;
 
@@ -812,6 +691,7 @@ window.loadMatchDetails(fixtureId);
             }
         });
 
+        // Update browser history
         if (updateHistory) {
             const url = page === "home"
                 ? window.location.pathname
@@ -820,8 +700,10 @@ window.loadMatchDetails(fixtureId);
             window.history.pushState({ page }, "", url);
         }
 
+        // Close dashboard after navigation
         closeDashboard();
 
+        // Return to top
         window.scrollTo({
             top: 0,
             behavior: "auto"
@@ -830,9 +712,10 @@ window.loadMatchDetails(fixtureId);
         document.title = page.toUpperCase() + " | LUX LIVE FOOTBALL";
     }
 
-    // Make the top Leagues button use the same navigation system.
+    // Allow the top Leagues button to use the same in-page navigation.
     window.openLuxPage = openPage;
 
+    // Open dashboard
     function openDashboard() {
         if (!dashboardPanel || !dashboardOverlay) return;
 
@@ -845,6 +728,19 @@ window.loadMatchDetails(fixtureId);
         }
     }
 
+    // Close dashboard
+    function closeDashboard() {
+        if (dashboardPanel) dashboardPanel.classList.remove("open");
+        if (dashboardOverlay) dashboardOverlay.classList.remove("open");
+
+        document.body.classList.remove("dashboard-open");
+
+        if (dashboardToggle) {
+            dashboardToggle.setAttribute("aria-expanded", "false");
+        }
+    }
+
+    // Dashboard buttons
     if (dashboardToggle) {
         dashboardToggle.addEventListener("click", openDashboard);
     }
@@ -857,7 +753,7 @@ window.loadMatchDetails(fixtureId);
         dashboardOverlay.addEventListener("click", closeDashboard);
     }
 
-    // Handle dashboard and footer page links.
+    // Navigation links, including footer links
     document.addEventListener("click", function (event) {
         const link = event.target.closest('a[href*="?page="]');
 
@@ -874,7 +770,7 @@ window.loadMatchDetails(fixtureId);
         openPage(page);
     });
 
-    // Browser back and forward navigation.
+    // Browser and Android back/forward navigation
     window.addEventListener("popstate", function () {
         const page =
             new URLSearchParams(window.location.search).get("page") || "home";
@@ -882,18 +778,21 @@ window.loadMatchDetails(fixtureId);
         openPage(page, false);
     });
 
+    // Escape key closes dashboard
     document.addEventListener("keydown", function (event) {
         if (event.key === "Escape") {
             closeDashboard();
         }
     });
 
+    // Copyright year
     const year = document.getElementById("year");
 
     if (year) {
         year.textContent = new Date().getFullYear();
     }
 
+    // Open requested page on initial loading
     const initialPage =
         new URLSearchParams(window.location.search).get("page") || "home";
 
@@ -903,191 +802,47 @@ window.loadMatchDetails(fixtureId);
 
 
 /* =========================================
-   LUX LIVE STREAM LIBRARY
+   LUX LIVE TV
+   CLICKABLE STREAM LIBRARY
 ========================================= */
 
 window.luxLiveStreams = [];
-
-window.escapeLiveText = function (value) {
-    return String(value || "").replace(/[&<>"']/g, character => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-    }[character]));
-};
-
-
+window.escapeLiveText = value => String(value || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 window.loadLiveStreams = async function () {
-
-    const tv = document.getElementById("liveTvList");
-    const football = document.getElementById("liveFootballList");
-
-    if (!tv || !football) return;
-
-    tv.innerHTML = "<p>Loading TV channels...</p>";
-    football.innerHTML = "<p>Loading football broadcasts...</p>";
-
+    const tv=document.getElementById("liveTvList"), football=document.getElementById("liveFootballList");
+    if(!tv||!football) return;
+    tv.innerHTML="<p>Loading TV channels...</p>"; football.innerHTML="<p>Loading football broadcasts...</p>";
     try {
-
-        const token = sessionStorage.getItem("lux_user_token");
-
-        const response = await fetch("/api/live-streams", {
-            headers: token
-                ? { Authorization: `Bearer ${token}` }
-                : {}
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success ||
-            !Array.isArray(result.streams)) {
-            throw new Error(result.message || "Unable to load streams.");
-        }
-
-        window.luxLiveStreams = result.streams.filter(stream =>
-            stream.status !== "ended"
-        );
-
-        const groups = {
-            live_tv: [],
-            live_football: []
-        };
-
-        window.luxLiveStreams.forEach((stream, index) => {
-
-            const category = stream.category === "live_tv"
-                ? "live_tv"
-                : "live_football";
-
-            groups[category].push({
-                stream,
-                index
-            });
-
-        });
-
-        const render = function (items, emptyMessage) {
-
-            if (!items.length) {
-                return `<p class="stream-empty">${emptyMessage}</p>`;
-            }
-
-            return items.map(({ stream, index }) => {
-
-                const teams = [
-                    stream.home_team,
-                    stream.away_team
-                ].filter(Boolean).join(" vs ");
-
-                const title = stream.title ||
-                    teams ||
-                    (stream.category === "live_tv"
-                        ? "TV Channel"
-                        : "Football Broadcast");
-
-                return `
-                    <button class="live-stream-card"
-                            type="button"
-                            onclick="playLiveStream(${index})">
-
-                        <span class="live-status">
-                            ${stream.status === "live"
-                                ? "● LIVE NOW"
-                                : "SCHEDULED"}
-                        </span>
-
-                        <strong>${window.escapeLiveText(title)}</strong>
-
-                        <small>
-                            ${window.escapeLiveText(
-                                stream.competition ||
-                                (stream.category === "live_tv"
-                                    ? "Television"
-                                    : "Football")
-                            )}
-                        </small>
-
-                        ${teams
-                            ? `<small>${window.escapeLiveText(teams)}</small>`
-                            : ""}
-
-                        <span class="stream-play-label">▶ WATCH</span>
-
-                    </button>
-                `;
-
-            }).join("");
-
-        };
-
-        tv.innerHTML = render(
-            groups.live_tv,
-            "No published TV channels yet."
-        );
-
-        football.innerHTML = render(
-            groups.live_football,
-            "No published football broadcasts yet."
-        );
-
-    } catch (error) {
-
-        console.error("LUX live streams:", error);
-
-        tv.textContent = error.message;
-        football.textContent = error.message;
-
+        const token=sessionStorage.getItem("lux_user_token");
+        const response=await fetch("/api/live-streams",{headers:token?{Authorization:`Bearer ${token}`} : {}});
+        const result=await response.json();
+        if(!response.ok||!result.success||!Array.isArray(result.streams)) throw new Error(result.message||"Unable to load streams.");
+        window.luxLiveStreams=result.streams.filter(s=>s.status!=="ended");
+        const groups={live_tv:[],live_football:[]};
+        window.luxLiveStreams.forEach((stream,index)=>groups[stream.category==="live_tv"?"live_tv":"live_football"].push({stream,index}));
+        const render=(items,empty)=>items.length?items.map(({stream,index})=>{
+            const teams=[stream.home_team,stream.away_team].filter(Boolean).join(" vs ");
+            const title=stream.title||teams||(stream.category==="live_tv"?"TV Channel":"Football Broadcast");
+            return `<button class="live-stream-card" type="button" onclick="playLiveStream(${index})"><span class="live-status">${stream.status==="live"?"● LIVE NOW":"SCHEDULED"}</span><strong>${window.escapeLiveText(title)}</strong><small>${window.escapeLiveText(stream.competition||(stream.category==="live_tv"?"Television":"Football"))}</small>${teams?`<small>${window.escapeLiveText(teams)}</small>`:""}<span class="stream-play-label">▶ WATCH</span></button>`;
+        }).join(""):`<p class="stream-empty">${empty}</p>`;
+        tv.innerHTML=render(groups.live_tv,"No published TV channels yet.");
+        football.innerHTML=render(groups.live_football,"No published football broadcasts yet.");
+    } catch(error) {
+        console.error("LUX live streams:",error); tv.textContent=error.message; football.textContent=error.message;
     }
-
+};
+window.playLiveStream=function(index){
+    const stream=window.luxLiveStreams[index], player=document.getElementById("liveStreamPlayer");
+    if(!stream||!player)return;
+    const url=stream.playback_url;
+    if(!url||!url.startsWith("https://www.youtube-nocookie.com/embed/")){player.textContent="This stream cannot be played.";return;}
+    player.innerHTML=`<iframe src="${url}?autoplay=0&playsinline=1&rel=0" title="${window.escapeLiveText(stream.title||"LUX Live Stream")}" width="100%" height="100%" style="display:block;width:100%;aspect-ratio:16/9;border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
 };
 
-
-window.playLiveStream = function (index) {
-
-    const stream = window.luxLiveStreams[index];
-    const player = document.getElementById("liveStreamPlayer");
-
-    if (!stream || !player) return;
-
-    const url = stream.playback_url;
-
-    if (!url ||
-        !url.startsWith("https://www.youtube-nocookie.com/embed/")) {
-
-        player.textContent = "This stream cannot be played.";
-        return;
-
-    }
-
-    player.innerHTML = `
-        <iframe
-            src="${url}?autoplay=0&playsinline=1&rel=0"
-            title="${window.escapeLiveText(stream.title || "LUX Live Stream")}"
-            width="100%"
-            height="100%"
-            style="display:block;width:100%;aspect-ratio:16/9;border:0;"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen>
-        </iframe>
-    `;
-
-};
-
-
-// Load streams when the page is ready and the user has a session.
 document.addEventListener("DOMContentLoaded", function () {
-
-    if (sessionStorage.getItem("lux_user_token")) {
-        window.loadLiveStreams();
-    }
-
+    if (sessionStorage.getItem("lux_user_token")) window.loadLiveStreams();
 });
-
 </script>
 
 </body>
 </html>
-

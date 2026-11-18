@@ -1,3 +1,4 @@
+
 require("dotenv").config();
 
 const { createClient } = require("@supabase/supabase-js");
@@ -310,7 +311,7 @@ async function getCompetitionSeason(slug) {
     );
 }
 
-// GET TEAMS FOR ONE COMPETITION — DUPLICATES REMOVED
+// GET TEAMS FOR ONE COMPETITION
 async function getCompetitionTeams(slug) {
     const competition = competitions[slug];
 
@@ -329,42 +330,6 @@ async function getCompetitionTeams(slug) {
                 season
             });
 
-            const uniqueTeams = new Map();
-
-            for (const item of data.response || []) {
-                const team = item.team;
-
-                if (!team || !team.name) continue;
-
-                const key = team.id
-                    ? String(team.id)
-                    : team.name.trim().toLowerCase();
-
-                if (uniqueTeams.has(key)) continue;
-
-                uniqueTeams.set(key, {
-                    id: team.id,
-                    name: team.name.trim(),
-                    code: team.code,
-                    country: team.country,
-                    founded: team.founded,
-                    national: team.national,
-                    logo: team.logo,
-                    venue: {
-                        id: item.venue?.id,
-                        name: item.venue?.name,
-                        address: item.venue?.address,
-                        city: item.venue?.city,
-                        capacity: item.venue?.capacity,
-                        surface: item.venue?.surface,
-                        image: item.venue?.image
-                    }
-                });
-            }
-
-            const teams = [...uniqueTeams.values()]
-                .sort((a, b) => a.name.localeCompare(b.name));
-
             return {
                 competition: {
                     slug,
@@ -374,8 +339,20 @@ async function getCompetitionTeams(slug) {
                     id: competition.id,
                     season
                 },
-                count: teams.length,
-                teams
+                teams: Array.from(new Map((data.response || []).map(item => [
+                    String(item.team?.id || item.team?.name || "").trim().toLowerCase(),
+                    {
+                        id: item.team.id, name: item.team.name, code: item.team.code,
+                        country: item.team.country, founded: item.team.founded,
+                        national: item.team.national, logo: item.team.logo,
+                        venue: {
+                            id: item.venue?.id, name: item.venue?.name,
+                            address: item.venue?.address, city: item.venue?.city,
+                            capacity: item.venue?.capacity, surface: item.venue?.surface,
+                            image: item.venue?.image
+                        }
+                    }
+                ])).values())
             };
         }
     );
@@ -599,7 +576,7 @@ app.get("/api/matches/live", requireMember, async (req, res, next) => {
 
         const result = await cached(
             "all-live-matches",
-            30 * 1000,
+             30 * 1000,
             () => footballAPI("fixtures", {
                 live: "all"
             })
@@ -723,8 +700,7 @@ app.get("/api/platform", (req, res) => {
             "Live match listings",
             "Upcoming fixtures",
             "League standings",
-            "Match information",
-            "Member-only live TV and football stream categories"
+            "Match information"
         ]
     });
 });
@@ -792,9 +768,11 @@ app.get("/api/goal/leagues/:leagueId/fixtures", requireMember, async (req, res) 
     }
 });
 
+
 /* =========================================
    GOAL API - LIVE MATCHES
 ========================================= */
+
 
 app.get("/api/goal/fixtures/live", requireMember, async (req, res) => {
     try {
@@ -820,6 +798,7 @@ app.get("/api/goal/fixtures/live", requireMember, async (req, res) => {
         });
     }
 });
+
 
 /* =========================================
    GOAL API - TEAM RESULTS
@@ -1210,6 +1189,7 @@ app.post("/api/auth/login", async (req, res) => {
     }
 });
 
+
 // =========================================
 // VERIFY LUX USER SESSION
 // =========================================
@@ -1266,7 +1246,7 @@ app.get("/api/auth/me", async (req, res) => {
 });
 
 
-// ADMIN LOGIN
+ // ADMIN LOGIN
 app.post("/api/admin/login", async (req, res) => {
     try {
         const ip = req.ip;
@@ -1418,7 +1398,7 @@ async function requireAdmin(req, res, next) {
 
 
 // PUBLIC — PUBLISHED MANUAL HIGHLIGHTS
-app.get("/api/manual-highlights", async (req, res) => {
+app.get("/api/manual-highlights", requireMember, async (req, res) => {
     try {
         const { data, error } = await supabaseDB
             .from("manual_highlights")
@@ -1589,13 +1569,13 @@ app.patch("/api/admin/highlights/:id", requireAdmin, async (req, res) => {
         }
 
         if (Object.keys(updates).length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: "No valid changes were provided."
-            });
-        }
+    return res.status(400).json({
+        success: false,
+        message: "No valid changes were provided."
+    });
+}
 
-        updates.updated_at = new Date().toISOString();
+updates.updated_at = new Date().toISOString();
 
         const { data, error } = await supabaseDB
             .from("manual_highlights")
@@ -1646,6 +1626,7 @@ app.delete("/api/admin/highlights/:id", requireAdmin, async (req, res) => {
     }
 });
 
+
 // =========================================
 // LUX LIVE TV - STREAM MANAGEMENT API
 // =========================================
@@ -1688,36 +1669,20 @@ function getYouTubeEmbedUrl(value) {
 }
 
 
-// MEMBER: Get currently published streams.
-// Optional category: live_tv / live_football.
+// PUBLIC: Get currently published streams
 app.get("/api/live-streams", requireMember, async (req, res) => {
     try {
-        const category = String(req.query.category || "").trim().toLowerCase();
-        const allowedCategories = ["live_tv", "live_football"];
-
-        if (category && !allowedCategories.includes(category)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid stream category."
-            });
-        }
-
-        let query = supabaseDB
+        const { data, error } = await supabaseDB
             .from("live_streams")
             .select("*")
             .eq("is_published", true)
             .in("status", ["live", "scheduled"])
             .order("created_at", { ascending: false });
 
-        if (category) query = query.eq("category", category);
-
-        const { data, error } = await query;
         if (error) throw error;
 
         res.json({
             success: true,
-            category: category || "all",
-            count: (data || []).length,
             streams: data || []
         });
     } catch (error) {
@@ -1759,12 +1724,12 @@ app.post("/api/admin/live-streams", requireAdmin, async (req, res) => {
             home_team,
             away_team,
             competition,
-            category,
             source_url,
             status,
             scheduled_at,
             description,
-            is_published
+            is_published,
+            category
         } = req.body;
 
         if (!title || !source_url) {
@@ -1784,15 +1749,6 @@ app.post("/api/admin/live-streams", requireAdmin, async (req, res) => {
         }
 
         const allowedStatuses = ["scheduled", "live", "ended"];
-        const allowedCategories = ["live_tv", "live_football"];
-        const streamCategory = category || "live_football";
-
-        if (!allowedCategories.includes(streamCategory)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid stream category"
-            });
-        }
 
         if (status && !allowedStatuses.includes(status)) {
             return res.status(400).json({
@@ -1808,7 +1764,7 @@ app.post("/api/admin/live-streams", requireAdmin, async (req, res) => {
                 home_team: home_team || null,
                 away_team: away_team || null,
                 competition: competition || null,
-                category: streamCategory,
+                category: category === "live_tv" ? "live_tv" : "live_football",
                 stream_type: "external",
                 source_url: source_url.trim(),
                 playback_url,
@@ -1874,10 +1830,8 @@ app.patch("/api/admin/live-streams/:id", requireAdmin, async (req, res) => {
             updates.playback_url = playback_url;
         }
 
-        if (
-            updates.category !== undefined &&
-            !["live_tv", "live_football"].includes(updates.category)
-        ) {
+        if (updates.category !== undefined &&
+            !["live_tv", "live_football"].includes(updates.category)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid stream category"
@@ -1944,7 +1898,7 @@ app.delete("/api/admin/live-streams/:id", requireAdmin, async (req, res) => {
 });
 
 
-// API NOT FOUND
+ // API NOT FOUND
 app.use("/api", (req, res) => {
     res.status(404).json({
         success: false,
