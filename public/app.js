@@ -2228,3 +2228,257 @@ window.playHighlight = function (index) {
         console.log("LUX session:", error.message);
     }
 })();
+
+
+/* =====================================================
+   LUX LIVE FOOTBALL — HOMEPAGE SEARCH & ACCOUNT BRIDGE
+   Add this block at the VERY END of public/app.js
+===================================================== */
+
+"use strict";
+
+// -----------------------------------------------------
+// HOMEPAGE SEARCH
+// -----------------------------------------------------
+
+function initializeLuxHomepageSearch() {
+    const input = document.getElementById("homeSearchInput");
+    const searchButton = document.getElementById("homeSearchButton");
+    const resultsBox = document.getElementById("homeSearchResults");
+
+    if (!input || !searchButton || !resultsBox) return;
+
+    function runSearch() {
+        const query = input.value.trim().toLowerCase();
+
+        resultsBox.replaceChildren();
+
+        if (!query) {
+            resultsBox.hidden = true;
+            return;
+        }
+
+        const selectors = [
+            ".league-card",
+            ".league-team-card",
+            ".fixture-card",
+            ".match-card",
+            ".highlight-card"
+        ];
+
+        const matches = [];
+
+        document.querySelectorAll(selectors.join(",")).forEach(element => {
+            if (element.hidden) return;
+
+            const text = (element.innerText || element.textContent || "")
+                .replace(/\s+/g, " ")
+                .trim();
+
+            if (text.toLowerCase().includes(query)) {
+                matches.push({
+                    element,
+                    text: text.slice(0, 130)
+                });
+            }
+        });
+
+        if (matches.length === 0) {
+            const empty = document.createElement("p");
+            empty.textContent = "No matching teams, leagues or matches found.";
+            empty.className = "search-empty";
+            resultsBox.appendChild(empty);
+            resultsBox.hidden = false;
+            return;
+        }
+
+        matches.slice(0, 10).forEach(match => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "lux-search-result";
+            button.textContent = match.text;
+
+            button.addEventListener("click", () => {
+                resultsBox.hidden = true;
+
+                match.element.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
+                // Open the selected league, team or fixture
+                match.element.click();
+            });
+
+            resultsBox.appendChild(button);
+        });
+
+        resultsBox.hidden = false;
+    }
+
+    searchButton.addEventListener("click", runSearch);
+
+    input.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            runSearch();
+        }
+
+        if (event.key === "Escape") {
+            resultsBox.hidden = true;
+        }
+    });
+
+    input.addEventListener("input", () => {
+        if (!input.value.trim()) {
+            resultsBox.hidden = true;
+            resultsBox.replaceChildren();
+        }
+    });
+
+    document.addEventListener("click", event => {
+        if (
+            !resultsBox.contains(event.target) &&
+            event.target !== input &&
+            event.target !== searchButton
+        ) {
+            resultsBox.hidden = true;
+        }
+    });
+}
+
+// -----------------------------------------------------
+// REFRESH STREAMS AFTER SUCCESSFUL SIGN-IN
+// -----------------------------------------------------
+
+const luxOriginalLogin = window.login;
+
+if (typeof luxOriginalLogin === "function") {
+    window.login = async function () {
+        await luxOriginalLogin();
+
+        const token = sessionStorage.getItem("lux_user_token");
+        const role = sessionStorage.getItem("lux_user_role");
+
+        if (token && role === "user") {
+            document.body.classList.remove("lux-auth-locked");
+
+            if (typeof window.updateLuxAccountPage === "function") {
+                window.updateLuxAccountPage();
+            }
+
+            if (typeof window.loadLiveStreams === "function") {
+                window.loadLiveStreams(
+                    window.luxCurrentStreamCategory || "live_tv"
+                );
+            }
+        }
+    };
+}
+
+// -----------------------------------------------------
+// SIGN OUT
+// -----------------------------------------------------
+
+window.logout = function () {
+    const confirmed = window.confirm(
+        "Are you sure you want to sign out of LUX LIVE FOOTBALL?"
+    );
+
+    if (!confirmed) return;
+
+    sessionStorage.removeItem("lux_user_token");
+    sessionStorage.removeItem("lux_user_email");
+    sessionStorage.removeItem("lux_user_role");
+    sessionStorage.removeItem("lux_admin_token");
+
+    window.location.replace("/");
+};
+
+// -----------------------------------------------------
+// ACCOUNT PAGE REFRESH
+// -----------------------------------------------------
+
+window.refreshLuxAccount = function () {
+    const email =
+        sessionStorage.getItem("lux_user_email") || "Guest account";
+
+    const role =
+        sessionStorage.getItem("lux_user_role") || "guest";
+
+    const signedIn = Boolean(
+        sessionStorage.getItem("lux_user_token")
+    );
+
+    const emailElement = document.getElementById("luxAccountEmail");
+    const statusElement = document.getElementById("luxAccountStatus");
+    const signInButton = document.getElementById("accountSignInButton");
+    const signOutButton = document.getElementById("accountSignOutButton");
+
+    if (emailElement) {
+        emailElement.textContent = email;
+    }
+
+    if (statusElement) {
+        statusElement.textContent = signedIn
+            ? `Signed in · ${role === "admin" ? "Administrator" : "LUX Member"}`
+            : "Sign in to manage your LUX account.";
+    }
+
+    if (signInButton) {
+        signInButton.hidden = signedIn;
+    }
+
+    if (signOutButton) {
+        signOutButton.hidden = !signedIn;
+    }
+
+    const favouriteTeams =
+        document.getElementById("accountFavouriteTeams");
+
+    const favouriteLeagues =
+        document.getElementById("accountFavouriteLeagues");
+
+    const savedMatches =
+        document.getElementById("accountSavedMatches");
+
+    const notifications =
+        document.getElementById("accountNotifications");
+
+    if (!signedIn) {
+        if (favouriteTeams) {
+            favouriteTeams.textContent = "Sign in to manage your favourites.";
+        }
+
+        if (favouriteLeagues) {
+            favouriteLeagues.textContent = "Sign in to manage your leagues.";
+        }
+
+        if (savedMatches) {
+            savedMatches.textContent = "Sign in to access saved matches.";
+        }
+
+        if (notifications) {
+            notifications.textContent = "Sign in to manage notifications.";
+        }
+    }
+};
+
+// -----------------------------------------------------
+// START HOMEPAGE CONNECTIONS
+// -----------------------------------------------------
+
+document.addEventListener("DOMContentLoaded", () => {
+    initializeLuxHomepageSearch();
+
+    if (typeof window.updateLuxAccountPage === "function") {
+        const originalAccountUpdate = window.updateLuxAccountPage;
+
+        window.updateLuxAccountPage = function () {
+            originalAccountUpdate();
+            window.refreshLuxAccount();
+        };
+    } else {
+        window.refreshLuxAccount();
+    }
+});
