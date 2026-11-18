@@ -1,4 +1,3 @@
-
 require("dotenv").config();
 
 const { createClient } = require("@supabase/supabase-js");
@@ -311,7 +310,7 @@ async function getCompetitionSeason(slug) {
     );
 }
 
-// GET TEAMS FOR ONE COMPETITION
+// GET TEAMS FOR ONE COMPETITION — DUPLICATES REMOVED
 async function getCompetitionTeams(slug) {
     const competition = competitions[slug];
 
@@ -330,23 +329,27 @@ async function getCompetitionTeams(slug) {
                 season
             });
 
-            return {
-                competition: {
-                    slug,
-                    name: competition.name,
-                    country: competition.country,
-                    icon: competition.icon,
-                    id: competition.id,
-                    season
-                },
-                teams: (data.response || []).map(item => ({
-                    id: item.team.id,
-                    name: item.team.name,
-                    code: item.team.code,
-                    country: item.team.country,
-                    founded: item.team.founded,
-                    national: item.team.national,
-                    logo: item.team.logo,
+            const uniqueTeams = new Map();
+
+            for (const item of data.response || []) {
+                const team = item.team;
+
+                if (!team || !team.name) continue;
+
+                const key = team.id
+                    ? String(team.id)
+                    : team.name.trim().toLowerCase();
+
+                if (uniqueTeams.has(key)) continue;
+
+                uniqueTeams.set(key, {
+                    id: team.id,
+                    name: team.name.trim(),
+                    code: team.code,
+                    country: team.country,
+                    founded: team.founded,
+                    national: team.national,
+                    logo: team.logo,
                     venue: {
                         id: item.venue?.id,
                         name: item.venue?.name,
@@ -356,7 +359,23 @@ async function getCompetitionTeams(slug) {
                         surface: item.venue?.surface,
                         image: item.venue?.image
                     }
-                }))
+                });
+            }
+
+            const teams = [...uniqueTeams.values()]
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            return {
+                competition: {
+                    slug,
+                    name: competition.name,
+                    country: competition.country,
+                    icon: competition.icon,
+                    id: competition.id,
+                    season
+                },
+                count: teams.length,
+                teams
             };
         }
     );
@@ -462,7 +481,7 @@ app.get("/api/competitions", requireMember, (req, res) => {
 });
 
 // GET TEAMS FOR A COMPETITION
-app.get("/api/leagues/:slug/teams", requireMember, async (req, res) => {
+app.get("/api/leagues/:slug/teams", requireMember, async (req, res, next) => {
     try {
         const result = await getCompetitionTeams(req.params.slug);
 
@@ -476,7 +495,7 @@ app.get("/api/leagues/:slug/teams", requireMember, async (req, res) => {
 });
 
 // GET STANDINGS
-app.get("/api/leagues/:slug/standings", requireMember, async (req, res) => {
+app.get("/api/leagues/:slug/standings", requireMember, async (req, res, next) => {
     try {
         const competition = competitions[req.params.slug];
 
@@ -510,7 +529,7 @@ app.get("/api/leagues/:slug/standings", requireMember, async (req, res) => {
 });
 
 // GET FIXTURES FOR A COMPETITION
-app.get("/api/leagues/:slug/fixtures", requireMember, async (req, res) => {
+app.get("/api/leagues/:slug/fixtures", requireMember, async (req, res, next) => {
     try {
         const competition = competitions[req.params.slug];
 
@@ -549,7 +568,7 @@ app.get("/api/leagues/:slug/fixtures", requireMember, async (req, res) => {
 });
 
 // GET INDIVIDUAL TEAM PROFILE
-app.get("/api/teams/:id", requireMember, async (req, res) => {
+app.get("/api/teams/:id", requireMember, async (req, res, next) => {
     try {
         const teamId = Number(req.params.id);
 
@@ -572,7 +591,7 @@ app.get("/api/teams/:id", requireMember, async (req, res) => {
 });
 
 // LIVE MATCHES ACROSS ALL SIX COMPETITIONS
-app.get("/api/matches/live", requireMember, async (req, res) => {
+app.get("/api/matches/live", requireMember, async (req, res, next) => {
     try {
         const allowedLeagueIds = new Set(
             Object.values(competitions).map(item => item.id)
@@ -580,7 +599,7 @@ app.get("/api/matches/live", requireMember, async (req, res) => {
 
         const result = await cached(
             "all-live-matches",
-             30 * 1000,
+            30 * 1000,
             () => footballAPI("fixtures", {
                 live: "all"
             })
@@ -601,7 +620,7 @@ app.get("/api/matches/live", requireMember, async (req, res) => {
 });
 
 // UPCOMING FIXTURES ACROSS ALL SIX COMPETITIONS
-app.get("/api/matches/fixtures", requireMember, async (req, res) => {
+app.get("/api/matches/fixtures", requireMember, async (req, res, next) => {
     try {
         const results = await Promise.allSettled(
             Object.keys(competitions).map(async slug => {
@@ -645,7 +664,7 @@ app.get("/api/matches/fixtures", requireMember, async (req, res) => {
 });
 
 // SINGLE MATCH
-app.get("/api/matches/:id", requireMember, async (req, res) => {
+app.get("/api/matches/:id", requireMember, async (req, res, next) => {
     try {
         const matchId = Number(req.params.id);
 
@@ -704,7 +723,8 @@ app.get("/api/platform", (req, res) => {
             "Live match listings",
             "Upcoming fixtures",
             "League standings",
-            "Match information"
+            "Match information",
+            "Member-only live TV and football stream categories"
         ]
     });
 });
@@ -772,11 +792,9 @@ app.get("/api/goal/leagues/:leagueId/fixtures", requireMember, async (req, res) 
     }
 });
 
-
 /* =========================================
    GOAL API - LIVE MATCHES
 ========================================= */
-
 
 app.get("/api/goal/fixtures/live", requireMember, async (req, res) => {
     try {
@@ -803,12 +821,11 @@ app.get("/api/goal/fixtures/live", requireMember, async (req, res) => {
     }
 });
 
-
 /* =========================================
    GOAL API - TEAM RESULTS
 ========================================= */
 
-app.get("/api/goal/teams/:teamId/results", async (req, res) => {
+app.get("/api/goal/teams/:teamId/results", requireMember, async (req, res) => {
     try {
         const data = await goalAPI(
             `/teams/${encodeURIComponent(req.params.teamId)}/results`
@@ -828,7 +845,7 @@ app.get("/api/goal/teams/:teamId/results", async (req, res) => {
    GOAL API - TEAM UPCOMING MATCHES
 ========================================= */
 
-app.get("/api/goal/teams/:teamId/upcoming", async (req, res) => {
+app.get("/api/goal/teams/:teamId/upcoming", requireMember, async (req, res) => {
     try {
         const data = await goalAPI(
             `/teams/${encodeURIComponent(req.params.teamId)}/upcoming`
@@ -848,7 +865,7 @@ app.get("/api/goal/teams/:teamId/upcoming", async (req, res) => {
 // GOAL API — FOOTBALL HIGHLIGHTS
 // =========================================
 
-app.get("/api/goal/videos", async (req, res) => {
+app.get("/api/goal/videos", requireMember, async (req, res) => {
     try {
         const data = await goalAPI("/videos");
         res.json(data);
@@ -861,7 +878,7 @@ app.get("/api/goal/videos", async (req, res) => {
     }
 });
 
-app.get("/api/goal/videos/recent", async (req, res) => {
+app.get("/api/goal/videos/recent", requireMember, async (req, res) => {
     try {
         const data = await goalAPI("/videos/recent");
         res.json(data);
@@ -874,7 +891,7 @@ app.get("/api/goal/videos/recent", async (req, res) => {
     }
 });
 
-app.get("/api/goal/videos/match/:matchId", async (req, res) => {
+app.get("/api/goal/videos/match/:matchId", requireMember, async (req, res) => {
     try {
         const data = await goalAPI(
             `/videos/match/${encodeURIComponent(req.params.matchId)}`
@@ -889,7 +906,7 @@ app.get("/api/goal/videos/match/:matchId", async (req, res) => {
     }
 });
 
-app.get("/api/goal/videos/league/:leagueId", async (req, res) => {
+app.get("/api/goal/videos/league/:leagueId", requireMember, async (req, res) => {
     try {
         const data = await goalAPI(
             `/videos/league/${encodeURIComponent(req.params.leagueId)}`
@@ -904,7 +921,7 @@ app.get("/api/goal/videos/league/:leagueId", async (req, res) => {
     }
 });
 
-app.get("/api/goal/videos/date/:date", async (req, res) => {
+app.get("/api/goal/videos/date/:date", requireMember, async (req, res) => {
     try {
         const data = await goalAPI(
             `/videos/date/${encodeURIComponent(req.params.date)}`
@@ -925,7 +942,7 @@ app.get("/api/goal/videos/date/:date", async (req, res) => {
 ========================================= */
 
 // MATCH DETAILS
-app.get("/api/goal/fixtures/:fixtureId", async (req, res) => {
+app.get("/api/goal/fixtures/:fixtureId", requireMember, async (req, res) => {
     try {
         const { fixtureId } = req.params;
 
@@ -946,7 +963,7 @@ app.get("/api/goal/fixtures/:fixtureId", async (req, res) => {
 });
 
 // MATCH EVENTS
-app.get("/api/goal/fixtures/:fixtureId/events", async (req, res) => {
+app.get("/api/goal/fixtures/:fixtureId/events", requireMember, async (req, res) => {
     try {
         const { fixtureId } = req.params;
 
@@ -967,7 +984,7 @@ app.get("/api/goal/fixtures/:fixtureId/events", async (req, res) => {
 });
 
 // MATCH LINEUPS
-app.get("/api/goal/fixtures/:fixtureId/lineups", async (req, res) => {
+app.get("/api/goal/fixtures/:fixtureId/lineups", requireMember, async (req, res) => {
     try {
         const { fixtureId } = req.params;
 
@@ -988,7 +1005,7 @@ app.get("/api/goal/fixtures/:fixtureId/lineups", async (req, res) => {
 });
 
 // MATCH STATISTICS
-app.get("/api/goal/fixtures/:fixtureId/statistics", async (req, res) => {
+app.get("/api/goal/fixtures/:fixtureId/statistics", requireMember, async (req, res) => {
     try {
         const { fixtureId } = req.params;
 
@@ -1193,7 +1210,6 @@ app.post("/api/auth/login", async (req, res) => {
     }
 });
 
-
 // =========================================
 // VERIFY LUX USER SESSION
 // =========================================
@@ -1250,7 +1266,7 @@ app.get("/api/auth/me", async (req, res) => {
 });
 
 
- // ADMIN LOGIN
+// ADMIN LOGIN
 app.post("/api/admin/login", async (req, res) => {
     try {
         const ip = req.ip;
@@ -1573,13 +1589,13 @@ app.patch("/api/admin/highlights/:id", requireAdmin, async (req, res) => {
         }
 
         if (Object.keys(updates).length === 0) {
-    return res.status(400).json({
-        success: false,
-        message: "No valid changes were provided."
-    });
-}
+            return res.status(400).json({
+                success: false,
+                message: "No valid changes were provided."
+            });
+        }
 
-updates.updated_at = new Date().toISOString();
+        updates.updated_at = new Date().toISOString();
 
         const { data, error } = await supabaseDB
             .from("manual_highlights")
@@ -1630,7 +1646,6 @@ app.delete("/api/admin/highlights/:id", requireAdmin, async (req, res) => {
     }
 });
 
-
 // =========================================
 // LUX LIVE TV - STREAM MANAGEMENT API
 // =========================================
@@ -1673,20 +1688,36 @@ function getYouTubeEmbedUrl(value) {
 }
 
 
-// PUBLIC: Get currently published streams
-app.get("/api/live-streams", async (req, res) => {
+// MEMBER: Get currently published streams.
+// Optional category: live_tv / live_football.
+app.get("/api/live-streams", requireMember, async (req, res) => {
     try {
-        const { data, error } = await supabaseDB
+        const category = String(req.query.category || "").trim().toLowerCase();
+        const allowedCategories = ["live_tv", "live_football"];
+
+        if (category && !allowedCategories.includes(category)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid stream category."
+            });
+        }
+
+        let query = supabaseDB
             .from("live_streams")
             .select("*")
             .eq("is_published", true)
             .in("status", ["live", "scheduled"])
             .order("created_at", { ascending: false });
 
+        if (category) query = query.eq("category", category);
+
+        const { data, error } = await query;
         if (error) throw error;
 
         res.json({
             success: true,
+            category: category || "all",
+            count: (data || []).length,
             streams: data || []
         });
     } catch (error) {
@@ -1728,6 +1759,7 @@ app.post("/api/admin/live-streams", requireAdmin, async (req, res) => {
             home_team,
             away_team,
             competition,
+            category,
             source_url,
             status,
             scheduled_at,
@@ -1752,6 +1784,15 @@ app.post("/api/admin/live-streams", requireAdmin, async (req, res) => {
         }
 
         const allowedStatuses = ["scheduled", "live", "ended"];
+        const allowedCategories = ["live_tv", "live_football"];
+        const streamCategory = category || "live_football";
+
+        if (!allowedCategories.includes(streamCategory)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid stream category"
+            });
+        }
 
         if (status && !allowedStatuses.includes(status)) {
             return res.status(400).json({
@@ -1767,6 +1808,7 @@ app.post("/api/admin/live-streams", requireAdmin, async (req, res) => {
                 home_team: home_team || null,
                 away_team: away_team || null,
                 competition: competition || null,
+                category: streamCategory,
                 stream_type: "external",
                 source_url: source_url.trim(),
                 playback_url,
@@ -1803,6 +1845,7 @@ app.patch("/api/admin/live-streams/:id", requireAdmin, async (req, res) => {
             "home_team",
             "away_team",
             "competition",
+            "category",
             "status",
             "scheduled_at",
             "description",
@@ -1829,6 +1872,16 @@ app.patch("/api/admin/live-streams/:id", requireAdmin, async (req, res) => {
 
             updates.source_url = req.body.source_url.trim();
             updates.playback_url = playback_url;
+        }
+
+        if (
+            updates.category !== undefined &&
+            !["live_tv", "live_football"].includes(updates.category)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid stream category"
+            });
         }
 
         if (
@@ -1891,7 +1944,7 @@ app.delete("/api/admin/live-streams/:id", requireAdmin, async (req, res) => {
 });
 
 
- // API NOT FOUND
+// API NOT FOUND
 app.use("/api", (req, res) => {
     res.status(404).json({
         success: false,
