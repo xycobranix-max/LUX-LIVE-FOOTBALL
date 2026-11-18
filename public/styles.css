@@ -1974,3 +1974,61 @@ body.lux-auth-locked #loginModal .modal-content {
     max-width: 430px;
     margin: auto;
 }
+
+
+/* =========================================
+   LUX HOMEPAGE SEARCH RESULTS
+========================================= */
+
+.home-search-results[hidden] {
+    display: none !important;
+}
+
+.home-search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 850px;
+    margin: 12px auto 0;
+    padding: 12px;
+    background: #111713;
+    border: 1px solid rgba(139, 255, 0, 0.22);
+    border-radius: 12px;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.lux-search-result {
+    width: 100%;
+    padding: 13px 15px;
+    text-align: left;
+    color: #f4f7f2;
+    background: #1a211c;
+    border: 1px solid #29332b;
+    border-radius: 8px;
+    cursor: pointer;
+    font: inherit;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.lux-search-result:hover {
+    background: #253226;
+    border-color: #8bff00;
+}
+
+.search-empty {
+    margin: 0;
+    padding: 12px;
+    color: #aab5aa;
+    text-align: center;
+}
+
+.home-search-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+.home-search-results::-webkit-scrollbar-thumb {
+    background: #8bff00;
+    border-radius: 10px;
+}
